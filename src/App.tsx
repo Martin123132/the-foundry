@@ -6,6 +6,7 @@ import {
   type ChangeEvent,
   type DragEvent,
   type FormEvent,
+  type RefObject,
 } from 'react'
 import {
   ArrowLeft,
@@ -39,6 +40,7 @@ import {
   Redo2,
   Trash2,
   Undo2,
+  Upload,
   Webhook,
 } from 'lucide-react'
 import './App.css'
@@ -65,6 +67,7 @@ import type {
   AppMeta,
   FieldType,
   FormField,
+  FormDefinitionPayload,
   FormMode,
   FormRecord,
   FormStatus,
@@ -105,6 +108,7 @@ function AdminApp() {
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   const saveTokenRef = useRef(0)
+  const definitionImportRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let active = true
@@ -606,6 +610,52 @@ function AdminApp() {
     }
     const nextResponses = await api.listResponses(form.id)
     setResponses(nextResponses)
+  }
+
+  async function exportFormDefinition() {
+    if (!form) {
+      return
+    }
+
+    if (dirty) {
+      await saveCurrent(form, { silent: true })
+    }
+
+    window.location.href = api.exportDefinitionUrl(form.id)
+    setNotice('Definition export prepared')
+  }
+
+  async function importFormDefinition(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    try {
+      const text = await file.text()
+      let payload: unknown
+      try {
+        payload = JSON.parse(text) as FormDefinitionPayload
+      } catch {
+        throw new Error('Import file must be valid JSON')
+      }
+
+      const imported = await api.importFormDefinition(payload)
+      setForms((items) => [imported, ...items.filter((item) => item.id !== imported.id)])
+      setSelectedId(imported.id)
+      setNotice(`${imported.title} imported as a draft`)
+    } catch (importError) {
+      setError(
+        importError instanceof Error
+          ? importError.message
+          : 'Could not import definition',
+      )
+    } finally {
+      setSaving(false)
+      event.target.value = ''
+    }
   }
 
   function exportVisibleResponsesJson() {
@@ -1202,6 +1252,13 @@ function AdminApp() {
             </button>
           </section>
 
+          <DefinitionTransfer
+            inputRef={definitionImportRef}
+            onExport={exportFormDefinition}
+            onImport={(event) => void importFormDefinition(event)}
+            onOpenImport={() => definitionImportRef.current?.click()}
+          />
+
           <section className="inspector-section">
             <div className="section-title compact">
               <div>
@@ -1534,6 +1591,51 @@ function FieldInspector({
         </button>
       </div>
     </div>
+  )
+}
+
+function DefinitionTransfer({
+  inputRef,
+  onExport,
+  onImport,
+  onOpenImport,
+}: {
+  inputRef: RefObject<HTMLInputElement | null>
+  onExport: () => Promise<void>
+  onImport: (event: ChangeEvent<HTMLInputElement>) => void
+  onOpenImport: () => void
+}) {
+  return (
+    <section className="inspector-section">
+      <div className="section-title compact">
+        <div>
+          <p>Definition</p>
+          <h2>Move form</h2>
+        </div>
+        <FileText size={18} aria-hidden="true" />
+      </div>
+      <div className="definition-transfer">
+        <button type="button" className="button ghost" onClick={() => void onExport()}>
+          <Download size={16} aria-hidden="true" />
+          Export definition
+        </button>
+        <button type="button" className="button ghost" onClick={onOpenImport}>
+          <Upload size={16} aria-hidden="true" />
+          Import draft
+        </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/json,.json"
+          className="sr-only"
+          onChange={onImport}
+        />
+      </div>
+      <p className="definition-note">
+        Moves questions, copy, mode, and colors. Responses and webhook URLs stay out
+        of the export.
+      </p>
+    </section>
   )
 }
 

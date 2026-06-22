@@ -52,6 +52,35 @@ export interface SubmitPayload {
   honeypot?: string
 }
 
+export interface FormDefinitionField {
+  type: FieldType
+  label: string
+  placeholder: string
+  required: boolean
+  options: string[]
+  position: number
+}
+
+export interface FormDefinitionPayload {
+  exportVersion: 1
+  source: 'the-foundry'
+  exportedAt: string
+  omitted: {
+    responses: true
+    webhookUrl: true
+  }
+  form: {
+    title: string
+    description: string
+    mode: FormMode
+    accentColor: string
+    backgroundColor: string
+    textColor: string
+    successMessage: string
+    fields: FormDefinitionField[]
+  }
+}
+
 export interface AppMeta {
   storageMode: 'sqlite'
   dataDir: string

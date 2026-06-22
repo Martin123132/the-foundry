@@ -24,6 +24,10 @@ service restarts.
 The admin Operations panel reflects the active `HOST`, `PORT`,
 `OPENFORMS_DATA_DIR`, SQLite database file, and built-in new-form defaults.
 
+Form definition exports are safe to move between installs. They contain form
+copy, colors, mode, and questions, but omit collected responses and webhook
+URLs. Imported definitions always start as drafts.
+
 ## Generic Host
 
 ```bash

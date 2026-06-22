@@ -14,6 +14,17 @@ const host = process.env.HOST || '127.0.0.1'
 const port = Number(process.env.PORT || 4174)
 const rateWindowMs = 60_000
 const rateLimit = new Map()
+const validFieldTypes = new Set([
+  'short_text',
+  'long_text',
+  'email',
+  'number',
+  'single_choice',
+  'multi_choice',
+  'dropdown',
+  'rating',
+  'date',
+])
 
 mkdirSync(dataDir, { recursive: true })
 
@@ -110,6 +121,13 @@ async function handleApi(request, response, url) {
     return
   }
 
+  if (request.method === 'POST' && url.pathname === '/api/forms/import') {
+    const body = await readJson(request)
+    const form = importFormDefinition(body)
+    sendJson(response, 201, form)
+    return
+  }
+
   if (parts[0] === 'api' && parts[1] === 'forms' && parts[2]) {
     const formId = parts[2]
 
@@ -149,6 +167,11 @@ async function handleApi(request, response, url) {
 
     if (parts[3] === 'export.csv' && request.method === 'GET') {
       sendCsv(response, formId)
+      return
+    }
+
+    if (parts[3] === 'definition.json' && request.method === 'GET') {
+      sendFormDefinition(response, formId)
       return
     }
   }
@@ -219,6 +242,48 @@ function createForm() {
     required: true,
     options: [],
     position: 0,
+  })
+
+  return getForm(formId)
+}
+
+function importFormDefinition(body) {
+  const definition = normalizeFormDefinition(body)
+  const now = new Date().toISOString()
+  const formId = randomUUID()
+
+  db.prepare(
+    `
+    INSERT INTO forms (
+      id, title, description, status, mode, accent_color, background_color,
+      text_color, success_message, webhook_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `,
+  ).run(
+    formId,
+    definition.title,
+    definition.description,
+    'draft',
+    definition.mode,
+    definition.accentColor,
+    definition.backgroundColor,
+    definition.textColor,
+    definition.successMessage,
+    '',
+    now,
+    now,
+  )
+
+  definition.fields.forEach((field, position) => {
+    insertField(formId, {
+      id: randomUUID(),
+      type: field.type,
+      label: field.label,
+      placeholder: field.placeholder,
+      required: field.required,
+      options: field.options,
+      position,
+    })
   })
 
   return getForm(formId)
@@ -386,6 +451,50 @@ function sendCsv(response, formId) {
   response.end(lines.join('\n'))
 }
 
+function sendFormDefinition(response, formId) {
+  const form = getForm(formId)
+  if (!form) {
+    sendJson(response, 404, { error: 'Form not found' })
+    return
+  }
+
+  const payload = buildFormDefinition(form)
+  response.writeHead(200, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${slugify(form.title)}-definition.json"`,
+  })
+  response.end(`${JSON.stringify(payload, null, 2)}\n`)
+}
+
+function buildFormDefinition(form) {
+  return {
+    exportVersion: 1,
+    source: 'the-foundry',
+    exportedAt: new Date().toISOString(),
+    omitted: {
+      responses: true,
+      webhookUrl: true,
+    },
+    form: {
+      title: form.title,
+      description: form.description,
+      mode: form.mode,
+      accentColor: form.accentColor,
+      backgroundColor: form.backgroundColor,
+      textColor: form.textColor,
+      successMessage: form.successMessage,
+      fields: form.fields.map((field, index) => ({
+        type: field.type,
+        label: field.label,
+        placeholder: field.placeholder,
+        required: field.required,
+        options: Array.isArray(field.options) ? field.options : [],
+        position: index,
+      })),
+    },
+  }
+}
+
 function rowToFormSummary(row) {
   return {
     id: row.id,
@@ -459,7 +568,11 @@ async function readJson(request) {
   if (chunks.length === 0) {
     return {}
   }
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  } catch {
+    throw new HttpError(400, 'Body must be valid JSON')
+  }
 }
 
 function sendJson(response, status, body) {
@@ -556,18 +669,99 @@ function seedDatabase() {
 }
 
 function validFieldType(type) {
-  const valid = new Set([
-    'short_text',
-    'long_text',
-    'email',
-    'number',
-    'single_choice',
-    'multi_choice',
-    'dropdown',
-    'rating',
-    'date',
-  ])
-  return valid.has(type) ? type : 'short_text'
+  return validFieldTypes.has(type) ? type : 'short_text'
+}
+
+function normalizeFormDefinition(body) {
+  if (!body || typeof body !== 'object') {
+    throw new HttpError(400, 'Import file must be a JSON object')
+  }
+  if (body.exportVersion !== 1 || body.source !== 'the-foundry') {
+    throw new HttpError(400, 'Import file must be a The Foundry definition export')
+  }
+  if (!body.form || typeof body.form !== 'object') {
+    throw new HttpError(400, 'Import file is missing a form definition')
+  }
+
+  const form = body.form
+  if (!Array.isArray(form.fields)) {
+    throw new HttpError(400, 'Import file must include a fields array')
+  }
+  if (form.fields.length === 0) {
+    throw new HttpError(400, 'Import file must include at least one field')
+  }
+  if (form.fields.length > 100) {
+    throw new HttpError(400, 'Import file cannot include more than 100 fields')
+  }
+
+  return {
+    title: requiredImportText(form.title, 'title', 140),
+    description: optionalImportText(form.description, 1000),
+    mode: form.mode === 'classic' ? 'classic' : 'flow',
+    accentColor: importColor(form.accentColor, 'accentColor', '#087f7a'),
+    backgroundColor: importColor(form.backgroundColor, 'backgroundColor', '#f7f8f8'),
+    textColor: importColor(form.textColor, 'textColor', '#1f2937'),
+    successMessage: optionalImportText(
+      form.successMessage,
+      500,
+      'Thanks, your response was recorded.',
+    ),
+    fields: form.fields.map((field, index) => normalizeImportField(field, index)),
+  }
+}
+
+function normalizeImportField(field, index) {
+  if (!field || typeof field !== 'object') {
+    throw new HttpError(400, `Field ${index + 1} must be an object`)
+  }
+  if (!validFieldTypes.has(field.type)) {
+    throw new HttpError(400, `Field ${index + 1} has an unsupported type`)
+  }
+
+  const needsOptions =
+    field.type === 'single_choice' ||
+    field.type === 'multi_choice' ||
+    field.type === 'dropdown'
+  const options = Array.isArray(field.options)
+    ? field.options
+        .map((option) => optionalImportText(option, 160))
+        .filter(Boolean)
+        .slice(0, 100)
+    : []
+
+  if (needsOptions && options.length === 0) {
+    throw new HttpError(400, `Field ${index + 1} needs at least one option`)
+  }
+
+  return {
+    type: field.type,
+    label: requiredImportText(field.label, `field ${index + 1} label`, 240),
+    placeholder: optionalImportText(field.placeholder, 500),
+    required: Boolean(field.required),
+    options: needsOptions ? options : [],
+  }
+}
+
+function requiredImportText(value, label, maxLength) {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new HttpError(400, `Import file is missing ${label}`)
+  }
+
+  return value.trim().slice(0, maxLength)
+}
+
+function optionalImportText(value, maxLength, fallback = '') {
+  return typeof value === 'string' ? value.trim().slice(0, maxLength) : fallback
+}
+
+function importColor(value, label, fallback) {
+  if (value === undefined || value === null || value === '') {
+    return fallback
+  }
+  if (typeof value !== 'string' || !/^#[0-9a-f]{6}$/i.test(value)) {
+    throw new HttpError(400, `Import file has an invalid ${label}`)
+  }
+  return value
 }
 
 function cleanText(value, fallback) {

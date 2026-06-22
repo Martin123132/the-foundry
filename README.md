@@ -16,6 +16,7 @@ vendor lock-in, or handing their data to another subscription service.
 - Collect responses into local SQLite storage
 - Search and filter collected responses
 - Export responses as CSV or structured JSON
+- Import and export full form definitions between installs
 - Configure webhook delivery for downstream workflows
 - Inspect storage, environment, and default form settings in the admin UI
 - Run locally, on a small server, or in Docker
@@ -61,7 +62,7 @@ By default, The Foundry stores data in:
 Set `OPENFORMS_DATA_DIR` to use another directory:
 
 ```powershell
-$env:OPENFORMS_DATA_DIR = "D:\revenge-tour\openforms\.data"
+$env:OPENFORMS_DATA_DIR = "D:\foundry-data"
 npm run serve
 ```
 
@@ -70,6 +71,13 @@ for compatibility with existing local installs.
 
 The admin Operations panel shows the active SQLite mode, data directory,
 database file, bind address, port, and default new-form colors.
+
+## Form Definitions
+
+Use the Definition panel in the admin UI to export a form as portable JSON or
+import a JSON definition as a new draft. Definition exports include form copy,
+mode, colors, and questions. They intentionally omit responses and webhook URLs
+so demo files can be shared without collected data or private delivery targets.
 
 ## Docker
 
@@ -117,7 +125,6 @@ npm run serve    Build, then start the production server
 
 - Response search, filtering, and JSON export polish
 - Stronger public sharing controls
-- Import/export for full form definitions
 - Docker image publishing
 - Accessibility and keyboard QA passes
 
