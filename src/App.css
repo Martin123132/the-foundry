@@ -126,6 +126,12 @@
   transform: none;
 }
 
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(8, 127, 122, 0.58);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(8, 127, 122, 0.13);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1460,7 +1466,11 @@
 
 .runner-error {
   margin: 0;
-  color: var(--danger);
+  padding: 10px 12px;
+  color: #791d16;
+  background: #fff1ee;
+  border: 1px solid #f3c1b9;
+  border-radius: 8px;
   font-weight: 720;
 }
 

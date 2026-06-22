@@ -773,8 +773,12 @@ function AdminApp() {
           </div>
         </div>
         <div className="topbar-actions">
-          {notice ? <span className="notice">{notice}</span> : null}
-          <span className={`save-state ${saveState}`}>
+          {notice ? (
+            <span className="notice" role="status" aria-live="polite">
+              {notice}
+            </span>
+          ) : null}
+          <span className={`save-state ${saveState}`} role="status" aria-live="polite">
             {saveStatusLabel}
           </span>
           <div className="history-controls" aria-label="Edit history controls">
@@ -819,7 +823,7 @@ function AdminApp() {
         </div>
       </header>
 
-      {error ? <div className="error-bar">{error}</div> : null}
+      {error ? <div className="error-bar" role="alert">{error}</div> : null}
 
       <div className="studio-grid">
         <aside className="form-rail">
@@ -844,6 +848,8 @@ function AdminApp() {
                 type="button"
                 key={item.id}
                 className={`form-row ${item.id === form.id ? 'active' : ''}`}
+                aria-current={item.id === form.id ? 'true' : undefined}
+                aria-label={`${item.title}, ${item.status}, ${item.responseCount} responses`}
                 onClick={() => setSelectedId(item.id)}
               >
                 <span
@@ -935,7 +941,7 @@ function AdminApp() {
               Drag a handle to reorder questions, or use the move up and move down buttons.
               Changes autosave and can be undone.
             </p>
-            <p className="sr-only" role="status" aria-live="polite">
+            <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
               {reorderAnnouncement}
             </p>
             <div className="field-stack" aria-describedby="reorder-instructions">
@@ -1570,13 +1576,18 @@ function FieldInspector({
         Required answer
       </label>
       <div className="inspector-actions">
-        <button type="button" className="icon-button" aria-label="Move up" onClick={onMoveUp}>
+        <button
+          type="button"
+          className="icon-button"
+          aria-label={`Move ${field.label} up`}
+          onClick={onMoveUp}
+        >
           <ChevronUp size={16} aria-hidden="true" />
         </button>
         <button
           type="button"
           className="icon-button"
-          aria-label="Move down"
+          aria-label={`Move ${field.label} down`}
           onClick={onMoveDown}
         >
           <ChevronDown size={16} aria-hidden="true" />
@@ -1770,6 +1781,7 @@ function PublicForm({ formId }: { formId: string }) {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const runnerQuestionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let active = true
@@ -1798,6 +1810,14 @@ function PublicForm({ formId }: { formId: string }) {
 
   const orderedFields = useMemo(() => sortFields(form?.fields ?? []), [form])
   const currentField = orderedFields[step]
+
+  useEffect(() => {
+    const target = runnerQuestionRef.current?.querySelector<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | HTMLButtonElement
+    >('input:not([type="hidden"]), textarea, select, button:not([disabled])')
+
+    target?.focus()
+  }, [form?.id, step])
 
   function setAnswer(fieldId: string, value: AnswerValue) {
     setAnswers((current) => ({ ...current, [fieldId]: value }))
@@ -1895,7 +1915,18 @@ function PublicForm({ formId }: { formId: string }) {
             <h1>{form.title}</h1>
             <p>{form.description}</p>
           </div>
-          <div className="progress-meter" aria-label="Progress">
+          <div
+            className="progress-meter"
+            role="progressbar"
+            aria-label="Form progress"
+            aria-valuemin={0}
+            aria-valuemax={orderedFields.length}
+            aria-valuenow={
+              form.mode === 'classic'
+                ? orderedFields.length
+                : Math.min(step + 1, orderedFields.length)
+            }
+          >
             <span
               style={{
                 width: `${Math.round(
@@ -1915,6 +1946,8 @@ function PublicForm({ formId }: { formId: string }) {
                   className={`${index === step ? 'active' : ''} ${
                     fieldIsComplete(field) ? 'complete' : ''
                   }`}
+                  aria-current={index === step ? 'step' : undefined}
+                  aria-label={`Question ${index + 1}: ${field.label}`}
                   onClick={() => setStep(index)}
                 >
                   <span>{index + 1}</span>
@@ -1935,7 +1968,7 @@ function PublicForm({ formId }: { formId: string }) {
         />
 
         {form.mode === 'classic' ? (
-          <div className="classic-stack">
+          <div className="classic-stack" ref={runnerQuestionRef}>
             {orderedFields.map((field) => (
               <RunnerField
                 key={field.id}
@@ -1946,16 +1979,18 @@ function PublicForm({ formId }: { formId: string }) {
             ))}
           </div>
         ) : currentField ? (
-          <RunnerField
-            field={currentField}
-            value={answers[currentField.id]}
-            onChange={(value) => setAnswer(currentField.id, value)}
-            index={step + 1}
-            total={orderedFields.length}
-          />
+          <div ref={runnerQuestionRef}>
+            <RunnerField
+              field={currentField}
+              value={answers[currentField.id]}
+              onChange={(value) => setAnswer(currentField.id, value)}
+              index={step + 1}
+              total={orderedFields.length}
+            />
+          </div>
         ) : null}
 
-        {error ? <p className="runner-error">{error}</p> : null}
+        {error ? <p className="runner-error" role="alert">{error}</p> : null}
 
         <footer className="runner-actions">
           {form.mode === 'flow' ? (
@@ -2045,6 +2080,7 @@ function RunnerField({
             rows={6}
             value={stringValue}
             placeholder={field.placeholder}
+            aria-required={field.required}
             onChange={(event) => onChange(event.target.value)}
           />
         ) : null}
@@ -2062,6 +2098,7 @@ function RunnerField({
             }
             value={stringValue}
             placeholder={field.placeholder}
+            aria-required={field.required}
             onChange={(event) =>
               onChange(
                 field.type === 'number'
@@ -2072,7 +2109,11 @@ function RunnerField({
           />
         ) : null}
         {field.type === 'dropdown' ? (
-          <select value={stringValue} onChange={(event) => onChange(event.target.value)}>
+          <select
+            value={stringValue}
+            aria-required={field.required}
+            onChange={(event) => onChange(event.target.value)}
+          >
             <option value="">Select an answer</option>
             {field.options.map((option) => (
               <option key={option} value={option}>
@@ -2084,12 +2125,13 @@ function RunnerField({
       </label>
 
       {field.type === 'single_choice' ? (
-        <div className="option-grid">
+        <div className="option-grid" role="group" aria-label={field.label}>
           {field.options.map((option) => (
             <button
               type="button"
               key={option}
               className={`option-button ${value === option ? 'selected' : ''}`}
+              aria-pressed={value === option}
               onClick={() => onChange(option)}
             >
               {value === option ? (
@@ -2104,12 +2146,13 @@ function RunnerField({
       ) : null}
 
       {field.type === 'multi_choice' ? (
-        <div className="option-grid">
+        <div className="option-grid" role="group" aria-label={field.label}>
           {field.options.map((option) => (
             <button
               type="button"
               key={option}
               className={`option-button ${selectedOptions.includes(option) ? 'selected' : ''}`}
+              aria-pressed={selectedOptions.includes(option)}
               onClick={() => toggleOption(option)}
             >
               {selectedOptions.includes(option) ? (
@@ -2124,12 +2167,14 @@ function RunnerField({
       ) : null}
 
       {field.type === 'rating' ? (
-        <div className="rating-row">
+        <div className="rating-row" role="group" aria-label={field.label}>
           {[1, 2, 3, 4, 5].map((score) => (
             <button
               type="button"
               key={score}
               className={Number(value) === score ? 'selected' : ''}
+              aria-label={`${score} out of 5`}
+              aria-pressed={Number(value) === score}
               onClick={() => onChange(score)}
             >
               {score}
