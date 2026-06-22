@@ -42,8 +42,24 @@ OPENFORMS_DATA_DIR=/data PORT=4174 npm run start
 docker compose up --build -d
 ```
 
+For a direct Docker run:
+
+```bash
+docker build -t the-foundry:local .
+docker run -d --name the-foundry \
+  -p 4174:4174 \
+  -v foundry-data:/data \
+  the-foundry:local
+```
+
 Back up the Docker volume named `openforms_foundry-data` or the host path you
 mount at `/data`.
+
+The production image runs as the non-root `node` user, stores SQLite files in
+`/data`, and exposes a healthcheck against `/api/meta`. CI builds and
+smoke-runs the image but does not publish it. If image publishing is enabled,
+use predictable tags such as `ghcr.io/martin123132/the-foundry:<version>` and
+`ghcr.io/martin123132/the-foundry:<commit-sha>`.
 
 ## Reverse Proxy
 

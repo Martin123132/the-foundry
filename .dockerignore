@@ -5,7 +5,11 @@
 dist
 docs
 node_modules
+playwright-report
+test-results
+tests
 npm-debug.log*
+playwright.a11y.config.mjs
 Dockerfile
 docker-compose.yml
 *.sqlite

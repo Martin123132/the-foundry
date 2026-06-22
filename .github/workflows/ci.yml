@@ -33,3 +33,32 @@ jobs:
 
       - name: Accessibility smoke
         run: npm run test:a11y
+
+      - name: Docker build smoke
+        run: |
+          docker build \
+            --tag the-foundry:ci \
+            --tag ghcr.io/martin123132/the-foundry:${{ github.sha }} \
+            .
+
+      - name: Docker run smoke
+        run: |
+          docker volume create foundry-ci-data
+          docker run --rm -d \
+            --name the-foundry-ci \
+            -p 4174:4174 \
+            -v foundry-ci-data:/data \
+            the-foundry:ci
+          for i in {1..45}; do
+            if [ "$(docker inspect --format='{{.State.Health.Status}}' the-foundry-ci)" = "healthy" ]; then
+              docker exec the-foundry-ci node -e "fetch('http://127.0.0.1:4174/api/meta').then(async (response) => { console.log(await response.text()); process.exit(response.ok ? 0 : 1) }).catch((error) => { console.error(error); process.exit(1) })"
+              docker rm -f the-foundry-ci
+              docker volume rm foundry-ci-data
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs the-foundry-ci
+          docker rm -f the-foundry-ci
+          docker volume rm foundry-ci-data
+          exit 1

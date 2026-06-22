@@ -87,6 +87,13 @@ Build and run with Docker Compose:
 docker compose up --build
 ```
 
+Or build and run the production image directly:
+
+```powershell
+docker build -t the-foundry:local .
+docker run --rm -p 4174:4174 -v foundry-data:/data the-foundry:local
+```
+
 The container serves the app on:
 
 ```text
@@ -94,6 +101,12 @@ http://127.0.0.1:4174
 ```
 
 Docker stores SQLite data in the `foundry-data` volume mounted at `/data`.
+CI currently builds and smoke-runs the image without publishing it. When a
+release publishing flow is enabled, the intended image tag is:
+
+```text
+ghcr.io/martin123132/the-foundry:<version-or-commit>
+```
 
 ## Deployment
 
@@ -126,7 +139,6 @@ npm run serve    Build, then start the production server
 
 - Response search, filtering, and JSON export polish
 - Stronger public sharing controls
-- Docker image publishing
 - Accessibility and keyboard QA passes
 
 ## License
