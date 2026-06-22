@@ -61,6 +61,9 @@ smoke-runs the image but does not publish it. If image publishing is enabled,
 use predictable tags such as `ghcr.io/martin123132/the-foundry:<version>` and
 `ghcr.io/martin123132/the-foundry:<commit-sha>`.
 
+See [docs/DOCKER_PUBLISHING.md](docs/DOCKER_PUBLISHING.md) before enabling any
+registry push workflow.
+
 ## Reverse Proxy
 
 The app listens on `127.0.0.1` by default in the Node server. Containers should

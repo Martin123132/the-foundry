@@ -108,6 +108,9 @@ release publishing flow is enabled, the intended image tag is:
 ghcr.io/martin123132/the-foundry:<version-or-commit>
 ```
 
+See [docs/DOCKER_PUBLISHING.md](docs/DOCKER_PUBLISHING.md) for the publishing
+policy, checklist, and non-publishing dry-run workflow.
+
 ## Deployment
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for production notes, environment variables,

@@ -1,0 +1,75 @@
+name: Docker Publish Dry Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Intended image tag to validate without publishing
+        required: true
+        default: v0.0.0-dry-run
+      include_latest:
+        description: Also build a local latest tag without publishing
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  dry-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate requested tag
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.image_tag }}"
+          if ! [[ "$TAG" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$ ]]; then
+            echo "Invalid Docker tag: $TAG"
+            exit 1
+          fi
+          echo "Validated dry-run tag: $TAG"
+
+      - name: Build intended image tags
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          TAG="${{ inputs.image_tag }}"
+          TAG_ARGS=(--tag "${IMAGE}:${TAG}" --tag "${IMAGE}:${GITHUB_SHA}")
+          if [ "${{ inputs.include_latest }}" = "true" ]; then
+            TAG_ARGS+=(--tag "${IMAGE}:latest")
+          fi
+          docker build "${TAG_ARGS[@]}" .
+          docker image inspect "${IMAGE}:${TAG}" > /tmp/foundry-image.json
+          echo "Built ${IMAGE}:${TAG}"
+          echo "Dry run only: no registry login and no docker push."
+
+      - name: Smoke-run dry-run image
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          TAG="${{ inputs.image_tag }}"
+          docker volume create foundry-publish-dry-run-data
+          docker run --rm -d \
+            --name the-foundry-publish-dry-run \
+            -p 4175:4174 \
+            -v foundry-publish-dry-run-data:/data \
+            "${IMAGE}:${TAG}"
+          for i in {1..45}; do
+            if [ "$(docker inspect --format='{{.State.Health.Status}}' the-foundry-publish-dry-run)" = "healthy" ]; then
+              docker exec the-foundry-publish-dry-run node -e "fetch('http://127.0.0.1:4174/api/meta').then(async (response) => { console.log(await response.text()); process.exit(response.ok ? 0 : 1) }).catch((error) => { console.error(error); process.exit(1) })"
+              docker rm -f the-foundry-publish-dry-run
+              docker volume rm foundry-publish-dry-run-data
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs the-foundry-publish-dry-run
+          docker rm -f the-foundry-publish-dry-run
+          docker volume rm foundry-publish-dry-run-data
+          exit 1
