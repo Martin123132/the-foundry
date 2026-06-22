@@ -71,6 +71,7 @@ import type {
 } from './types'
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+type ResponseFilter = 'all' | 'complete' | 'needs_answer'
 
 function App() {
   const formMatch = window.location.pathname.match(/^\/f\/([^/]+)/)
@@ -88,6 +89,7 @@ function AdminApp() {
   const [form, setForm] = useState<FormRecord | null>(null)
   const [responses, setResponses] = useState<ResponseRecord[]>([])
   const [responseQuery, setResponseQuery] = useState('')
+  const [responseFilter, setResponseFilter] = useState<ResponseFilter>('all')
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -151,6 +153,7 @@ function AdminApp() {
         setForm(nextForm)
         setResponses(nextResponses)
         setResponseQuery('')
+        setResponseFilter('all')
         setSelectedFieldId(nextForm.fields[0]?.id ?? null)
         setDirty(false)
         setSaveState('saved')
@@ -176,12 +179,34 @@ function AdminApp() {
   const orderedFields = useMemo(() => sortFields(form?.fields ?? []), [form])
   const selectedField = orderedFields.find((field) => field.id === selectedFieldId)
   const normalizedResponseQuery = responseQuery.trim().toLowerCase()
-  const filteredResponses = useMemo(() => {
-    if (!normalizedResponseQuery) {
-      return responses
-    }
+  const responseStats = useMemo(() => {
+    const withEmpty = responses.filter((response) =>
+      responseHasEmptyAnswer(response, orderedFields),
+    ).length
 
+    return {
+      complete: responses.length - withEmpty,
+      needsAnswer: withEmpty,
+    }
+  }, [orderedFields, responses])
+  const filteredResponses = useMemo(() => {
     return responses.filter((response) => {
+      if (
+        responseFilter === 'complete' &&
+        responseHasEmptyAnswer(response, orderedFields)
+      ) {
+        return false
+      }
+      if (
+        responseFilter === 'needs_answer' &&
+        !responseHasEmptyAnswer(response, orderedFields)
+      ) {
+        return false
+      }
+      if (!normalizedResponseQuery) {
+        return true
+      }
+
       if (
         new Date(response.createdAt)
           .toLocaleString()
@@ -201,7 +226,7 @@ function AdminApp() {
         )
       })
     })
-  }, [normalizedResponseQuery, orderedFields, responses])
+  }, [normalizedResponseQuery, orderedFields, responseFilter, responses])
   const shareUrl = form ? `${window.location.origin}/f/${form.id}` : ''
   const embedCode = form
     ? `<iframe src="${shareUrl}" title="${form.title}" style="width:100%;height:720px;border:0;border-radius:8px"></iframe>`
@@ -546,6 +571,65 @@ function AdminApp() {
     }
     const nextResponses = await api.listResponses(form.id)
     setResponses(nextResponses)
+  }
+
+  function exportVisibleResponsesJson() {
+    if (!form) {
+      return
+    }
+
+    const payload = {
+      exportVersion: 1,
+      source: 'the-foundry',
+      exportedAt: new Date().toISOString(),
+      filters: {
+        query: responseQuery.trim(),
+        status: responseFilter,
+        visibleResponses: filteredResponses.length,
+        totalResponses: responses.length,
+      },
+      form: {
+        id: form.id,
+        title: form.title,
+        description: form.description,
+        status: form.status,
+        mode: form.mode,
+        createdAt: form.createdAt,
+        updatedAt: form.updatedAt,
+        fields: orderedFields.map((field) => ({
+          id: field.id,
+          label: field.label,
+          type: field.type,
+          required: field.required,
+          options: field.options,
+          position: field.position,
+        })),
+      },
+      responses: filteredResponses.map((response) => ({
+        id: response.id,
+        formId: response.formId,
+        createdAt: response.createdAt,
+        answers: orderedFields.map((field) => ({
+          fieldId: field.id,
+          label: field.label,
+          type: field.type,
+          value: response.answers[field.id] ?? '',
+          displayValue: answerLabel(response.answers[field.id]),
+        })),
+      })),
+    }
+    const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${slugifyFileName(form.title)}-responses.json`
+    document.body.append(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    setNotice(`${filteredResponses.length} responses exported as JSON`)
   }
 
   async function runGuideAction(action: GuideAction) {
@@ -897,6 +981,15 @@ function AdminApp() {
                   <Download size={16} aria-hidden="true" />
                   CSV
                 </a>
+                <button
+                  type="button"
+                  className="button ghost"
+                  onClick={exportVisibleResponsesJson}
+                  disabled={responses.length === 0}
+                >
+                  <FileText size={16} aria-hidden="true" />
+                  JSON
+                </button>
               </div>
             </div>
 
@@ -911,11 +1004,39 @@ function AdminApp() {
                   onChange={(event) => setResponseQuery(event.target.value)}
                 />
               </label>
-              {normalizedResponseQuery ? (
-                <span className="response-result-count">
-                  {filteredResponses.length} of {responses.length} shown
-                </span>
-              ) : null}
+              <div
+                className="response-filter"
+                role="group"
+                aria-label="Filter responses by answer completeness"
+              >
+                <button
+                  type="button"
+                  className={responseFilter === 'all' ? 'active' : ''}
+                  onClick={() => setResponseFilter('all')}
+                  disabled={responses.length === 0}
+                >
+                  All <span>{responses.length}</span>
+                </button>
+                <button
+                  type="button"
+                  className={responseFilter === 'complete' ? 'active' : ''}
+                  onClick={() => setResponseFilter('complete')}
+                  disabled={responses.length === 0}
+                >
+                  Complete <span>{responseStats.complete}</span>
+                </button>
+                <button
+                  type="button"
+                  className={responseFilter === 'needs_answer' ? 'active' : ''}
+                  onClick={() => setResponseFilter('needs_answer')}
+                  disabled={responses.length === 0}
+                >
+                  Needs answer <span>{responseStats.needsAnswer}</span>
+                </button>
+              </div>
+              <span className="response-result-count" aria-live="polite">
+                {filteredResponses.length} of {responses.length} shown
+              </span>
             </div>
 
             <div className="response-table-wrap">
@@ -933,7 +1054,7 @@ function AdminApp() {
                     </tr>
                   ) : filteredResponses.length === 0 ? (
                     <tr>
-                      <td colSpan={2}>No matching responses</td>
+                      <td colSpan={2}>No responses match this search or filter</td>
                     </tr>
                   ) : (
                     filteredResponses.map((response) => (
@@ -1750,3 +1871,25 @@ function StatusScreen({
 }
 
 export default App
+
+function responseHasEmptyAnswer(response: ResponseRecord, fields: FormField[]) {
+  return fields.some((field) => {
+    const value = response.answers[field.id]
+
+    if (Array.isArray(value)) {
+      return value.length === 0
+    }
+
+    return String(value ?? '').trim() === ''
+  })
+}
+
+function slugifyFileName(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 60) || 'the-foundry'
+  )
+}

@@ -13,7 +13,8 @@ vendor lock-in, or handing their data to another subscription service.
 - Publish public form links and iframe embeds
 - Guide users through draft, launch, sharing, and response review
 - Collect responses into local SQLite storage
-- Export responses as CSV
+- Search and filter collected responses
+- Export responses as CSV or structured JSON
 - Configure webhook delivery for downstream workflows
 - Run locally, on a small server, or in Docker
 
