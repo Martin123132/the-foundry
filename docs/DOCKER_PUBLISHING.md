@@ -55,6 +55,9 @@ Run the manual **Docker Publish Dry Run** workflow from GitHub Actions. It:
 - Does not authenticate to GHCR.
 - Does not call `docker push`.
 
+CI also runs `npm run verify:docker-policy` to check that the dry-run workflow
+stays manual, read-only for packages, and free of registry login or push steps.
+
 ## Enabling Publishing Later
 
 When the registry and release policy are confirmed, add a separate publish step
