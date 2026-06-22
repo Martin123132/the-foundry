@@ -1310,6 +1310,7 @@ function AdminApp() {
               </div>
               <select
                 className="mode-select-fallback"
+                aria-label="Form mode"
                 value={form.mode}
                 onChange={(event) => patchForm({ mode: event.target.value as FormMode })}
               >
@@ -1410,7 +1411,14 @@ function GuidancePanel({
           </li>
         ))}
       </ol>
-      <div className="guide-progress" aria-label="Launch progress">
+      <div
+        className="guide-progress"
+        role="progressbar"
+        aria-label="Launch progress"
+        aria-valuemin={0}
+        aria-valuemax={steps.length}
+        aria-valuenow={completeCount}
+      >
         <span style={{ width: `${(completeCount / steps.length) * 100}%` }} />
       </div>
     </section>
@@ -1638,6 +1646,7 @@ function DefinitionTransfer({
           ref={inputRef}
           type="file"
           accept="application/json,.json"
+          aria-label="Import form definition JSON"
           className="sr-only"
           onChange={onImport}
         />

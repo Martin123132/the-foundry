@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview --host 127.0.0.1",
     "start": "node server.mjs",
-    "serve": "npm run build && node server.mjs"
+    "serve": "npm run build && node server.mjs",
+    "test:a11y": "playwright test --config playwright.a11y.config.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.21.0",
@@ -18,7 +19,9 @@
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.0",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

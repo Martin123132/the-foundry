@@ -348,7 +348,7 @@
 }
 
 .form-row-copy span {
-  color: var(--muted);
+  color: #4b5563;
   font-size: 0.8rem;
 }
 
@@ -1072,7 +1072,11 @@
   color: inherit;
 }
 
-.share-status small,
+.share-status small {
+  color: inherit;
+  line-height: 1.35;
+}
+
 .share-state-note {
   color: var(--muted);
   line-height: 1.35;
@@ -1391,7 +1395,7 @@
 }
 
 .runner-count {
-  color: color-mix(in srgb, currentColor 58%, transparent);
+  color: #4b5563;
   font-size: 0.86rem;
   font-weight: 760;
 }
