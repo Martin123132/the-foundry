@@ -408,6 +408,27 @@ function AdminApp() {
     }
   }
 
+  async function createNewFormFromTemplate(template: FormTemplate) {
+    setSaving(true)
+    setError('')
+    try {
+      const created = await api.createForm()
+      const templated = applyTemplate(created, template)
+      const saved = await api.saveForm(created.id, templated)
+      setForms((items) => [saved, ...items.filter((item) => item.id !== saved.id)])
+      setSelectedId(saved.id)
+      setNotice(`${template.name} form created`)
+    } catch (createError) {
+      setError(
+        createError instanceof Error
+          ? createError.message
+          : 'Could not create form from template',
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
   function addField(type: FieldType) {
     if (!form) {
       return
@@ -834,6 +855,7 @@ function AdminApp() {
           <TemplatePanel
             templates={formTemplates}
             onApply={applyStarterTemplate}
+            onCreate={createNewFormFromTemplate}
           />
 
           <section className="canvas-panel">
@@ -1309,9 +1331,11 @@ function GuideStepIcon({
 function TemplatePanel({
   templates,
   onApply,
+  onCreate,
 }: {
   templates: FormTemplate[]
   onApply: (template: FormTemplate) => void
+  onCreate: (template: FormTemplate) => void
 }) {
   return (
     <section className="template-panel">
@@ -1324,20 +1348,32 @@ function TemplatePanel({
       </div>
       <div className="template-grid">
         {templates.map((template) => (
-          <button
+          <article
             key={template.id}
-            type="button"
-            className="template-button"
-            onClick={() => onApply(template)}
+            className="template-card"
           >
-            <span>
-              <strong>{template.name}</strong>
-              <small>{template.description}</small>
-            </span>
-            <span className="template-meta">
-              {template.fields.length} fields
-            </span>
-          </button>
+            <button
+              type="button"
+              className="template-button"
+              onClick={() => onApply(template)}
+            >
+              <span>
+                <strong>{template.name}</strong>
+                <small>{template.description}</small>
+              </span>
+              <span className="template-meta">
+                {template.fields.length} fields
+              </span>
+            </button>
+            <button
+              type="button"
+              className="template-create-button"
+              onClick={() => onCreate(template)}
+            >
+              <Plus size={14} aria-hidden="true" />
+              New
+            </button>
+          </article>
         ))}
       </div>
     </section>

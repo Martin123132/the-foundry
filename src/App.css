@@ -381,22 +381,31 @@
   padding: 14px;
 }
 
+.template-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.template-card:hover {
+  transform: translateY(-1px);
+}
+
 .template-button {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
-  min-height: 76px;
-  padding: 12px;
+  min-height: 82px;
+  padding: 12px 12px 0;
   color: var(--text);
   text-align: left;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.template-button:hover {
-  transform: translateY(-1px);
+  background: transparent;
+  border: 0;
 }
 
 .template-button span:first-child {
@@ -430,6 +439,25 @@
   font-size: 0.74rem;
   font-weight: 760;
   white-space: nowrap;
+}
+
+.template-create-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  margin: 0 10px 10px;
+  color: #095b57;
+  background: #ffffff;
+  border: 1px solid #a7d8d5;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 760;
+}
+
+.template-create-button:hover {
+  background: var(--teal-soft);
 }
 
 .guide-panel {

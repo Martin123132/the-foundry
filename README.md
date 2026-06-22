@@ -9,6 +9,7 @@ vendor lock-in, or handing their data to another subscription service.
 ## What It Does
 
 - Build forms with short text, long text, email, number, choice, rating, and date fields
+- Start from common templates for contact, events, feedback, bugs, leads, and internal requests
 - Reorder questions with keyboard-friendly controls and drag handles
 - Publish public form links and iframe embeds
 - Guide users through draft, launch, sharing, and response review
@@ -19,6 +20,8 @@ vendor lock-in, or handing their data to another subscription service.
 - Run locally, on a small server, or in Docker
 
 ## Screenshots
+
+![Starter template picker](docs/images/the-foundry-templates.png)
 
 ![Published form runner](docs/images/the-foundry-runner.png)
 
@@ -106,7 +109,6 @@ npm run serve    Build, then start the production server
 
 ## Roadmap
 
-- Starter form templates
 - Response search, filtering, and JSON export polish
 - Stronger public sharing controls
 - Admin settings for data, branding, and deployment
