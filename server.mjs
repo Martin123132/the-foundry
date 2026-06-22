@@ -10,6 +10,7 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url))
 const distDir = join(rootDir, 'dist')
 const dataDir = process.env.OPENFORMS_DATA_DIR || join(rootDir, '.data')
 const dbPath = join(dataDir, 'openforms.sqlite')
+const host = process.env.HOST || '127.0.0.1'
 const port = Number(process.env.PORT || 4174)
 const rateWindowMs = 60_000
 const rateLimit = new Map()
@@ -85,8 +86,8 @@ const server = createServer(async (request, response) => {
   }
 })
 
-server.listen(port, '127.0.0.1', () => {
-  console.log(`The Foundry running at http://127.0.0.1:${port}`)
+server.listen(port, host, () => {
+  console.log(`The Foundry running at http://${host}:${port}`)
   console.log(`Data directory: ${dataDir}`)
 })
 

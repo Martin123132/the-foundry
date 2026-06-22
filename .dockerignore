@@ -1,0 +1,13 @@
+.data
+.git
+.github
+.qa
+dist
+docs
+node_modules
+npm-debug.log*
+Dockerfile
+docker-compose.yml
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

@@ -1,0 +1,15 @@
+services:
+  the-foundry:
+    build: .
+    ports:
+      - "4174:4174"
+    environment:
+      HOST: 0.0.0.0
+      PORT: "4174"
+      OPENFORMS_DATA_DIR: /data
+    volumes:
+      - foundry-data:/data
+    restart: unless-stopped
+
+volumes:
+  foundry-data:

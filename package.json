@@ -1,6 +1,5 @@
 {
   "name": "the-foundry",
-  "private": true,
   "version": "0.0.0",
   "description": "An open-source, self-hosted forms and response workflow platform.",
   "license": "AGPL-3.0-or-later",

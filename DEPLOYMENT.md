@@ -1,0 +1,58 @@
+# Deployment
+
+The Foundry runs as one Node server that serves the built React app and writes
+SQLite data to a local directory.
+
+## Requirements
+
+- Node 24 or newer
+- A persistent writable directory for SQLite
+- HTTPS at the edge, provided by your host or reverse proxy
+
+## Environment
+
+```text
+PORT=4174
+HOST=127.0.0.1
+OPENFORMS_DATA_DIR=/data
+```
+
+`OPENFORMS_DATA_DIR` must point at persistent storage. If it points at an
+ephemeral filesystem, form definitions and responses may disappear when the
+service restarts.
+
+## Generic Host
+
+```bash
+npm ci
+npm run build
+OPENFORMS_DATA_DIR=/data PORT=4174 npm run start
+```
+
+## Docker Host
+
+```bash
+docker compose up --build -d
+```
+
+Back up the Docker volume named `openforms_foundry-data` or the host path you
+mount at `/data`.
+
+## Reverse Proxy
+
+The app listens on `127.0.0.1` by default in the Node server. Containers should
+set `HOST=0.0.0.0` so Docker port publishing can reach the process. Set `PORT`
+as required and place the app behind the host's normal HTTP routing layer.
+
+## Backups
+
+Back up these files from `OPENFORMS_DATA_DIR`:
+
+```text
+openforms.sqlite
+openforms.sqlite-shm
+openforms.sqlite-wal
+webhook-errors.log
+```
+
+The `webhook-errors.log` file only exists after webhook delivery failures.

@@ -1,42 +1,120 @@
 # The Foundry
 
-The Foundry is a self-hosted forms and response workflow studio aimed at the
-subscription-fatigue gap: build forms, publish public links, collect responses,
-export CSV, and keep the data on your machine.
+The Foundry is an open-source, self-hosted forms and response workflow studio.
+It is built for people who want Typeform-style polish without response caps,
+vendor lock-in, or handing their data to another subscription service.
 
-## Current MVP
+![The Foundry builder](docs/images/the-foundry-builder.png)
 
-- Form builder with common question types
-- Guided launch path with next-best action
-- Public `/f/:id` form runner
-- One-question runner with clickable question map
-- Draft/published state
-- Response table
-- CSV export
-- Public link and iframe embed snippet
-- Webhook delivery setting
-- SQLite database stored under `.data/openforms.sqlite`
-- AGPL-3.0-or-later license
+## What It Does
 
-## Run
+- Build forms with short text, long text, email, number, choice, rating, and date fields
+- Reorder questions with keyboard-friendly controls and drag handles
+- Publish public form links and iframe embeds
+- Guide users through draft, launch, sharing, and response review
+- Collect responses into local SQLite storage
+- Export responses as CSV
+- Configure webhook delivery for downstream workflows
+- Run locally, on a small server, or in Docker
 
-Build the frontend and run the local server:
+## Screenshots
+
+![Published form runner](docs/images/the-foundry-runner.png)
+
+## Quick Start
+
+Install dependencies, build the frontend, and run the server:
 
 ```powershell
-$env:OPENFORMS_DATA_DIR = "D:\revenge-tour\openforms\.data"
+npm install
 npm run build
 npm run start
 ```
 
-The app serves on `http://127.0.0.1:4174` by default.
-
-## Data
-
-By default, the server stores data in:
+The app runs at:
 
 ```text
-D:\revenge-tour\openforms\.data\openforms.sqlite
+http://127.0.0.1:4174
 ```
 
-Set `OPENFORMS_DATA_DIR` to point at another directory. The legacy environment
-variable and SQLite filename are retained for compatibility.
+For local development with Vite:
+
+```powershell
+npm run dev
+```
+
+## Data Storage
+
+By default, The Foundry stores data in:
+
+```text
+.data/openforms.sqlite
+```
+
+Set `OPENFORMS_DATA_DIR` to use another directory:
+
+```powershell
+$env:OPENFORMS_DATA_DIR = "D:\revenge-tour\openforms\.data"
+npm run serve
+```
+
+The legacy `OPENFORMS_DATA_DIR` name and `openforms.sqlite` filename are kept
+for compatibility with existing local installs.
+
+## Docker
+
+Build and run with Docker Compose:
+
+```powershell
+docker compose up --build
+```
+
+The container serves the app on:
+
+```text
+http://127.0.0.1:4174
+```
+
+Docker stores SQLite data in the `foundry-data` volume mounted at `/data`.
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for production notes, environment variables,
+Docker hosting, reverse proxy guidance, and backup targets.
+
+## Deployment Notes
+
+The server is a small Node app that serves the built React frontend and owns the
+SQLite database. For a production deployment:
+
+- Run `npm run build` before `npm run start`
+- Set `PORT` if your host assigns one
+- Set `OPENFORMS_DATA_DIR` to a persistent disk
+- Put the app behind HTTPS
+- Back up the SQLite database regularly
+
+## Scripts
+
+```text
+npm run dev      Start the Vite dev server
+npm run build    Type-check and build the frontend
+npm run lint     Run ESLint
+npm run start    Start the production Node server
+npm run serve    Build, then start the production server
+```
+
+## Roadmap
+
+- Starter form templates
+- Response search, filtering, and JSON export polish
+- Stronger public sharing controls
+- Admin settings for data, branding, and deployment
+- Import/export for full form definitions
+- Docker image publishing
+- Accessibility and keyboard QA passes
+
+## License
+
+The Foundry is licensed under AGPL-3.0-or-later. If you improve it for a hosted
+service, share those improvements back with the people who made the commons
+valuable in the first place.
