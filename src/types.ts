@@ -51,3 +51,21 @@ export interface SubmitPayload {
   answers: Record<string, AnswerValue>
   honeypot?: string
 }
+
+export interface AppMeta {
+  storageMode: 'sqlite'
+  dataDir: string
+  databaseFile: string
+  environment: {
+    host: string
+    port: number
+    dataDirVariable: string
+  }
+  defaults: {
+    newFormStatus: FormStatus
+    mode: FormMode
+    accentColor: string
+    backgroundColor: string
+    textColor: string
+  }
+}

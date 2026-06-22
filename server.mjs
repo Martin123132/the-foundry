@@ -99,6 +99,11 @@ async function handleApi(request, response, url) {
     return
   }
 
+  if (request.method === 'GET' && url.pathname === '/api/meta') {
+    sendJson(response, 200, getMeta())
+    return
+  }
+
   if (request.method === 'POST' && url.pathname === '/api/forms') {
     const form = createForm()
     sendJson(response, 201, form)
@@ -217,6 +222,26 @@ function createForm() {
   })
 
   return getForm(formId)
+}
+
+function getMeta() {
+  return {
+    storageMode: 'sqlite',
+    dataDir,
+    databaseFile: dbPath,
+    environment: {
+      host,
+      port,
+      dataDirVariable: 'OPENFORMS_DATA_DIR',
+    },
+    defaults: {
+      newFormStatus: 'draft',
+      mode: 'flow',
+      accentColor: '#087f7a',
+      backgroundColor: '#f7f8f8',
+      textColor: '#1f2937',
+    },
+  }
 }
 
 function saveForm(formId, body) {

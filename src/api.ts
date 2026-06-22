@@ -1,4 +1,4 @@
-import type { FormRecord, ResponseRecord, SubmitPayload } from './types'
+import type { AppMeta, FormRecord, ResponseRecord, SubmitPayload } from './types'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -28,6 +28,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getMeta: () => request<AppMeta>('/api/meta'),
   listForms: () => request<FormRecord[]>('/api/forms'),
   createForm: () => request<FormRecord>('/api/forms', { method: 'POST' }),
   getForm: (id: string) => request<FormRecord>(`/api/forms/${id}`),

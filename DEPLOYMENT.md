@@ -21,6 +21,9 @@ OPENFORMS_DATA_DIR=/data
 ephemeral filesystem, form definitions and responses may disappear when the
 service restarts.
 
+The admin Operations panel reflects the active `HOST`, `PORT`,
+`OPENFORMS_DATA_DIR`, SQLite database file, and built-in new-form defaults.
+
 ## Generic Host
 
 ```bash

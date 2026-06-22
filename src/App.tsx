@@ -62,6 +62,7 @@ import {
 } from './formModel'
 import type {
   AnswerValue,
+  AppMeta,
   FieldType,
   FormField,
   FormMode,
@@ -87,6 +88,7 @@ function AdminApp() {
   const [forms, setForms] = useState<FormRecord[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [form, setForm] = useState<FormRecord | null>(null)
+  const [appMeta, setAppMeta] = useState<AppMeta | null>(null)
   const [responses, setResponses] = useState<ResponseRecord[]>([])
   const [responseQuery, setResponseQuery] = useState('')
   const [responseFilter, setResponseFilter] = useState<ResponseFilter>('all')
@@ -109,10 +111,14 @@ function AdminApp() {
 
     async function load() {
       try {
-        const items = await api.listForms()
+        const [items, meta] = await Promise.all([
+          api.listForms(),
+          api.getMeta().catch(() => null),
+        ])
         if (!active) {
           return
         }
+        setAppMeta(meta)
         setForms(items)
         setSelectedId((current) => current ?? items[0]?.id ?? null)
       } catch (loadError) {
@@ -587,6 +593,11 @@ function AdminApp() {
 
     const copied = await writeClipboardText(embedCode)
     setNotice(copied ? 'Embed copied' : 'Select the embed code')
+  }
+
+  async function copySettingValue(value: string, label: string) {
+    const copied = await writeClipboardText(value)
+    setNotice(copied ? `${label} copied` : `Select ${label.toLowerCase()} to copy`)
   }
 
   async function refreshResponses() {
@@ -1272,6 +1283,11 @@ function AdminApp() {
               />
             </label>
           </section>
+
+          <OperationsSettings
+            meta={appMeta}
+            onCopy={copySettingValue}
+          />
         </aside>
       </div>
     </div>
@@ -1536,6 +1552,110 @@ function ThemeControl({
       <input type="color" value={value} onChange={(event) => onChange(event.target.value)} />
       <input value={value} onChange={(event) => onChange(event.target.value)} />
     </label>
+  )
+}
+
+function OperationsSettings({
+  meta,
+  onCopy,
+}: {
+  meta: AppMeta | null
+  onCopy: (value: string, label: string) => Promise<void>
+}) {
+  return (
+    <section className="inspector-section">
+      <div className="section-title compact">
+        <div>
+          <p>Settings</p>
+          <h2>Operations</h2>
+        </div>
+        <Database size={18} aria-hidden="true" />
+      </div>
+
+      {meta ? (
+        <div className="ops-stack">
+          <div className="ops-card">
+            <p>Storage</p>
+            <dl>
+              <div>
+                <dt>Mode</dt>
+                <dd>{meta.storageMode.toUpperCase()}</dd>
+              </div>
+              <div>
+                <dt>Data directory</dt>
+                <dd>
+                  <code>{meta.dataDir}</code>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label="Copy data directory"
+                    onClick={() => void onCopy(meta.dataDir, 'Data directory')}
+                  >
+                    <Copy size={14} aria-hidden="true" />
+                  </button>
+                </dd>
+              </div>
+              <div>
+                <dt>Database file</dt>
+                <dd>
+                  <code>{meta.databaseFile}</code>
+                  <button
+                    type="button"
+                    className="icon-button"
+                    aria-label="Copy database file"
+                    onClick={() => void onCopy(meta.databaseFile, 'Database file')}
+                  >
+                    <Copy size={14} aria-hidden="true" />
+                  </button>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="ops-card">
+            <p>Environment</p>
+            <dl>
+              <div>
+                <dt>Bind</dt>
+                <dd>
+                  {meta.environment.host}:{meta.environment.port}
+                </dd>
+              </div>
+              <div>
+                <dt>Data env</dt>
+                <dd>
+                  <code>{meta.environment.dataDirVariable}</code>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="ops-card">
+            <p>New form defaults</p>
+            <dl>
+              <div>
+                <dt>Status</dt>
+                <dd>{meta.defaults.newFormStatus}</dd>
+              </div>
+              <div>
+                <dt>Mode</dt>
+                <dd>{meta.defaults.mode}</dd>
+              </div>
+              <div>
+                <dt>Theme</dt>
+                <dd className="ops-swatches">
+                  <span style={{ background: meta.defaults.accentColor }} />
+                  <span style={{ background: meta.defaults.backgroundColor }} />
+                  <span style={{ background: meta.defaults.textColor }} />
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      ) : (
+        <p className="empty-copy">Operational settings are unavailable.</p>
+      )}
+    </section>
   )
 }
 

@@ -17,6 +17,7 @@ vendor lock-in, or handing their data to another subscription service.
 - Search and filter collected responses
 - Export responses as CSV or structured JSON
 - Configure webhook delivery for downstream workflows
+- Inspect storage, environment, and default form settings in the admin UI
 - Run locally, on a small server, or in Docker
 
 ## Screenshots
@@ -67,6 +68,9 @@ npm run serve
 The legacy `OPENFORMS_DATA_DIR` name and `openforms.sqlite` filename are kept
 for compatibility with existing local installs.
 
+The admin Operations panel shows the active SQLite mode, data directory,
+database file, bind address, port, and default new-form colors.
+
 ## Docker
 
 Build and run with Docker Compose:
@@ -113,7 +117,6 @@ npm run serve    Build, then start the production server
 
 - Response search, filtering, and JSON export polish
 - Stronger public sharing controls
-- Admin settings for data, branding, and deployment
 - Import/export for full form definitions
 - Docker image publishing
 - Accessibility and keyboard QA passes
