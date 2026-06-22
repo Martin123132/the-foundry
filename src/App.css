@@ -1036,6 +1036,47 @@
   gap: 8px;
 }
 
+.share-status {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 11px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+.share-status.published {
+  color: #095b57;
+  background: var(--teal-soft);
+}
+
+.share-status.draft {
+  color: #7a4d00;
+  background: #fff1c2;
+}
+
+.share-status span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.share-status strong {
+  color: inherit;
+}
+
+.share-status small,
+.share-state-note {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.share-state-note {
+  margin: -4px 0 0;
+  font-size: 0.78rem;
+}
+
 .theme-control {
   display: grid;
   grid-template-columns: 88px 46px minmax(0, 1fr);

@@ -178,6 +178,7 @@ function AdminApp() {
 
   const orderedFields = useMemo(() => sortFields(form?.fields ?? []), [form])
   const selectedField = orderedFields.find((field) => field.id === selectedFieldId)
+  const isPublished = form?.status === 'published'
   const normalizedResponseQuery = responseQuery.trim().toLowerCase()
   const responseStats = useMemo(() => {
     const withEmpty = responses.filter((response) =>
@@ -569,7 +570,8 @@ function AdminApp() {
   }
 
   async function copyShareUrl() {
-    if (!shareUrl) {
+    if (!shareUrl || !isPublished) {
+      setNotice('Publish the form before sharing')
       return
     }
 
@@ -578,7 +580,8 @@ function AdminApp() {
   }
 
   async function copyEmbedCode() {
-    if (!embedCode) {
+    if (!embedCode || !isPublished) {
+      setNotice('Publish the form before sharing')
       return
     }
 
@@ -1130,25 +1133,58 @@ function AdminApp() {
               </div>
               <Link2 size={18} aria-hidden="true" />
             </div>
+            <div className={`share-status ${isPublished ? 'published' : 'draft'}`}>
+              {isPublished ? (
+                <CheckCircle2 size={17} aria-hidden="true" />
+              ) : (
+                <Circle size={17} aria-hidden="true" />
+              )}
+              <span>
+                <strong>{isPublished ? 'Public and accepting responses' : 'Draft - sharing disabled'}</strong>
+                <small>
+                  {isPublished
+                    ? 'Anyone with the link can submit this form.'
+                    : 'Publish the form to unlock the public link and embed.'}
+                </small>
+              </span>
+            </div>
             <div className="share-box">
-              <input value={shareUrl} readOnly aria-label="Share URL" />
+              <input
+                value={shareUrl}
+                readOnly
+                aria-label="Share URL"
+                aria-describedby="share-state-note"
+              />
               <button
                 type="button"
                 className="icon-button"
                 aria-label="Copy share URL"
                 onClick={() => void copyShareUrl()}
+                disabled={!isPublished}
               >
                 <Copy size={16} aria-hidden="true" />
               </button>
             </div>
+            <p id="share-state-note" className="share-state-note">
+              {isPublished
+                ? 'This URL is live. Unpublishing immediately closes submissions.'
+                : 'The URL is reserved, but public visitors cannot submit until you publish.'}
+            </p>
             <label className="field-label">
               Embed
-              <textarea className="embed-code" value={embedCode} readOnly rows={4} />
+              <textarea
+                className="embed-code"
+                value={embedCode}
+                readOnly
+                rows={4}
+                disabled={!isPublished}
+              />
             </label>
             <button
               type="button"
               className="button ghost"
               onClick={() => void copyEmbedCode()}
+              disabled={!isPublished}
             >
               <Copy size={16} aria-hidden="true" />
               Copy embed
@@ -1589,7 +1625,12 @@ function PublicForm({ formId }: { formId: string }) {
   }
 
   if (form.status !== 'published') {
-    return <StatusScreen title="Form unavailable" body="This form is not published." />
+    return (
+      <StatusScreen
+        title="Submissions are closed"
+        body="This form is still a draft. Ask the owner to publish it before sharing this link."
+      />
+    )
   }
 
   if (submitted) {
