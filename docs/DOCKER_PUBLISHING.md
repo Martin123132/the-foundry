@@ -140,5 +140,14 @@ gh workflow run docker-publish-release.yml \
   -f publish=false
 ```
 
-Only set `publish=true` for the actual publish event after all pre-flight checks and
-issue/owner approvals are recorded.
+This run validates the release-path build and smoke checks without writing to GHCR.
+
+5. When approvals are finalized, run the same command with `publish=true` to push:
+
+```bash
+gh workflow run docker-publish-release.yml \
+  --ref main \
+  -f image_tag=vX.Y.Z \
+  -f include_latest=false \
+  -f publish=true
+```
