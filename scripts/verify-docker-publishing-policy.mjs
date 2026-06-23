@@ -6,6 +6,7 @@ const root = resolve(import.meta.dirname, "..");
 const files = {
   workflow: resolve(root, ".github/workflows/docker-publish-dry-run.yml"),
   docs: resolve(root, "docs/DOCKER_PUBLISHING.md"),
+  docsChecklist: resolve(root, "docs/DOCKER_PUBLISHING_CHECKLIST.md"),
   readme: resolve(root, "README.md"),
   deployment: resolve(root, "DEPLOYMENT.md"),
 };
@@ -33,6 +34,7 @@ const expectNotMatches = (name, file, text, patterns) => {
 
 const workflow = read(files.workflow);
 const docs = read(files.docs);
+const docsChecklist = read(files.docsChecklist);
 const readme = read(files.readme);
 const deployment = read(files.deployment);
 
@@ -70,6 +72,17 @@ expectIncludes("publishing policy links", files.readme, readme, [
 
 expectIncludes("deployment policy links", files.deployment, deployment, [
   "docs/DOCKER_PUBLISHING.md",
+]);
+
+expectIncludes("publishing checklist", files.docs, docs, [
+  "docs/DOCKER_PUBLISHING_CHECKLIST.md",
+]);
+
+expectIncludes("publishing checklist content", files.docsChecklist, docsChecklist, [
+  "# Docker Publishing Readiness Checklist",
+  "## Registry & Access",
+  "## Trigger & Tag Policy",
+  "## Sign-off",
 ]);
 
 if (failures.length > 0) {
