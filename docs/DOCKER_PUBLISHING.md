@@ -105,3 +105,40 @@ When the registry and release policy are confirmed, use the guarded
 - Keep `Docker Publish Dry Run` available for final smoke verification.
 
 Do not publish from ordinary branch pushes or pull requests.
+
+## Controlled Release Runbook
+
+When ready to do an approved release publish:
+
+1. Confirm open-source policy/docs:
+
+- `docs/DOCKER_PUBLISHING_CHECKLIST.md`
+- `docs/DOCKER_PUBLISHING.md`
+- issue `#9` decision notes
+
+2. Run a final dry-run against the intended tag:
+
+```bash
+gh workflow run docker-publish-dry-run.yml \
+  --ref main \
+  -f image_tag=vX.Y.Z \
+  -f include_latest=false
+```
+
+3. Approve policy checks in the repo:
+
+- set repository variable `DOCKER_PUBLISH_ENABLED=true`
+- if needed, define exact release tag and `latest` policy
+
+4. Run the release workflow with explicit publish intent:
+
+```bash
+gh workflow run docker-publish-release.yml \
+  --ref main \
+  -f image_tag=vX.Y.Z \
+  -f include_latest=false \
+  -f publish=false
+```
+
+Only set `publish=true` for the actual publish event after all pre-flight checks and
+issue/owner approvals are recorded.
