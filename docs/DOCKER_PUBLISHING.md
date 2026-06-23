@@ -154,3 +154,7 @@ gh workflow run docker-publish-release.yml \
   -f include_latest=false \
   -f publish=true
 ```
+
+For a quick copy/paste block, see:
+
+- [docs/DOCKER_PUBLISH_QUICKRUN.md](DOCKER_PUBLISH_QUICKRUN.md)
