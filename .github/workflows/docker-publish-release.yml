@@ -1,0 +1,106 @@
+name: Docker Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Release tag to publish (for example v1.2.3)
+        required: true
+      include_latest:
+        description: Also publish :latest for the same image
+        required: false
+        type: boolean
+        default: false
+      publish:
+        description: Set to true to run push steps (requires repo variable enable flag)
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate requested tag
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.image_tag }}"
+          if ! [[ "$TAG" =~ ^v?[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$ ]]; then
+            echo "Invalid Docker tag: $TAG"
+            exit 1
+          fi
+
+      - name: Build release tags
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          TAG="${{ inputs.image_tag }}"
+          TAG_ARGS=(--tag "${IMAGE}:${TAG}" --tag "${IMAGE}:${GITHUB_SHA}")
+          if [ "${{ inputs.include_latest }}" = "true" ]; then
+            TAG_ARGS+=(--tag "${IMAGE}:latest")
+          fi
+          docker build "${TAG_ARGS[@]}" .
+
+      - name: Smoke-release image
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          TAG="${{ inputs.image_tag }}"
+          docker volume create foundry-release-smoke-data
+          docker run --rm -d \
+            --name the-foundry-release \
+            -p 4176:4174 \
+            -v foundry-release-smoke-data:/data \
+            "${IMAGE}:${TAG}"
+          for i in {1..45}; do
+            if [ "$(docker inspect --format='{{.State.Health.Status}}' the-foundry-release)" = "healthy" ]; then
+              docker exec the-foundry-release node -e "fetch('http://127.0.0.1:4174/api/meta').then(async (response) => { console.log(await response.text()); process.exit(response.ok ? 0 : 1) }).catch((error) => { console.error(error); process.exit(1) })"
+              docker rm -f the-foundry-release
+              docker volume rm foundry-release-smoke-data
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs the-foundry-release
+          docker rm -f the-foundry-release
+          docker volume rm foundry-release-smoke-data
+          exit 1
+
+      - name: Guard publish enablement
+        if: ${{ inputs.publish == 'true' }}
+        run: |
+          set -euo pipefail
+          if [ "${{ vars.DOCKER_PUBLISH_ENABLED }}" != "true" ]; then
+            echo "::error::Publish blocked: set repo variable DOCKER_PUBLISH_ENABLED=true to enable this workflow."
+            exit 1
+          fi
+
+      - name: Authenticate to GHCR
+        if: ${{ inputs.publish == 'true' && vars.DOCKER_PUBLISH_ENABLED == 'true' }}
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push release image tags
+        if: ${{ inputs.publish == 'true' && vars.DOCKER_PUBLISH_ENABLED == 'true' }}
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          TAG="${{ inputs.image_tag }}"
+          TAGS=("${TAG}" "${GITHUB_SHA}")
+          if [ "${{ inputs.include_latest }}" = "true" ]; then
+            TAGS+=(latest)
+          fi
+          for TAG_VALUE in "${TAGS[@]}"; do
+            docker push "${IMAGE}:${TAG_VALUE}"
+          done

@@ -95,6 +95,13 @@ stays manual, read-only for packages, and free of registry login or push steps.
 
 ## Enabling Publishing Later
 
-When the registry and release policy are confirmed, add a separate publish step
-that logs in to GHCR with `GITHUB_TOKEN` and pushes only from the approved
-release trigger. Do not publish from ordinary branch pushes or pull requests.
+When the registry and release policy are confirmed, use the guarded
+**Docker Publish Release** workflow:
+
+- Keep trigger as `workflow_dispatch` only.
+- Keep `DOCKER_PUBLISH_ENABLED=true` repo variable as the hard gate.
+- Keep `publish` input set to `true` only for approved release events.
+- Keep the approved tag policy (`<version>`, `<sha>`, and optional `latest`) as the source of truth.
+- Keep `Docker Publish Dry Run` available for final smoke verification.
+
+Do not publish from ordinary branch pushes or pull requests.
