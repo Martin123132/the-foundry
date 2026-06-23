@@ -1,0 +1,33 @@
+name: Docker publish approval
+description: Submit explicit approval to enable Docker image publishing for release
+title: "[Ops] Docker publishing approved for release"
+labels: ["enhancement", "ops"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Use this form to record final owner approval for issue #9.
+  - type: input
+    id: release_version
+    attributes:
+      label: Release version
+      description: Example: v0.1.0
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: checkboxes
+    id: release_decisions
+    attributes:
+      label: Approval decisions
+      options:
+        - label: Registry confirmed as `ghcr.io/martin123132/the-foundry`
+        - label: `DOCKER_PUBLISH_ENABLED` can be set to `true`
+        - label: `publish=true` workflow run is approved
+        - label: `latest` policy defined and documented
+  - type: textarea
+    id: runbook_notes
+    attributes:
+      label: Runbook notes
+      description: Include dry-run result id, approver name, and any release notes.
+    validations:
+      required: true

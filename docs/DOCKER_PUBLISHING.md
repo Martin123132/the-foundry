@@ -158,3 +158,6 @@ gh workflow run docker-publish-release.yml \
 For a quick copy/paste block, see:
 
 - [docs/DOCKER_PUBLISH_QUICKRUN.md](DOCKER_PUBLISH_QUICKRUN.md)
+
+For explicit owner sign-off, use the [Docker publish approval issue form](https://github.com/Martin123132/the-foundry/issues/new?template=docker_publish_approval.yml)
+before running the final `publish=true` workflow.
