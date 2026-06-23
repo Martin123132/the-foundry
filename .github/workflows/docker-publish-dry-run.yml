@@ -60,9 +60,16 @@ jobs:
             -p 4175:4174 \
             -v foundry-publish-dry-run-data:/data \
             "${IMAGE}:${TAG}"
-          for i in {1..45}; do
-            if [ "$(docker inspect --format='{{.State.Health.Status}}' the-foundry-publish-dry-run)" = "healthy" ]; then
-              docker exec the-foundry-publish-dry-run node -e "fetch('http://127.0.0.1:4174/api/meta').then(async (response) => { console.log(await response.text()); process.exit(response.ok ? 0 : 1) }).catch((error) => { console.error(error); process.exit(1) })"
+          for i in {1..60}; do
+            if [ -z "$(docker inspect --format '{{.State.Running}}' the-foundry-publish-dry-run 2>/dev/null)" ]; then
+              echo "Container exited before readiness check succeeded."
+              docker logs the-foundry-publish-dry-run
+              docker rm -f the-foundry-publish-dry-run
+              docker volume rm foundry-publish-dry-run-data
+              exit 1
+            fi
+
+            if docker exec the-foundry-publish-dry-run node -e "fetch('http://127.0.0.1:4174/api/meta').then(async (response) => { console.log(await response.text()); process.exit(response.ok ? 0 : 1) }).catch((error) => { console.error(error); process.exit(1) })"; then
               docker rm -f the-foundry-publish-dry-run
               docker volume rm foundry-publish-dry-run-data
               exit 0
