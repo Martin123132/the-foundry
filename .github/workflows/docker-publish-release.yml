@@ -75,7 +75,7 @@ jobs:
           exit 1
 
       - name: Guard publish enablement
-        if: ${{ inputs.publish == 'true' }}
+        if: ${{ inputs.publish }}
         run: |
           set -euo pipefail
           if [ "${{ vars.DOCKER_PUBLISH_ENABLED }}" != "true" ]; then
@@ -84,7 +84,7 @@ jobs:
           fi
 
       - name: Authenticate to GHCR
-        if: ${{ inputs.publish == 'true' && vars.DOCKER_PUBLISH_ENABLED == 'true' }}
+        if: ${{ inputs.publish && vars.DOCKER_PUBLISH_ENABLED == 'true' }}
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -92,7 +92,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push release image tags
-        if: ${{ inputs.publish == 'true' && vars.DOCKER_PUBLISH_ENABLED == 'true' }}
+        if: ${{ inputs.publish && vars.DOCKER_PUBLISH_ENABLED == 'true' }}
         run: |
           set -euo pipefail
           IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"

@@ -5,6 +5,7 @@ const root = resolve(import.meta.dirname, "..");
 
 const files = {
   workflow: resolve(root, ".github/workflows/docker-publish-dry-run.yml"),
+  releaseWorkflow: resolve(root, ".github/workflows/docker-publish-release.yml"),
   docs: resolve(root, "docs/DOCKER_PUBLISHING.md"),
   docsChecklist: resolve(root, "docs/DOCKER_PUBLISHING_CHECKLIST.md"),
   readme: resolve(root, "README.md"),
@@ -33,6 +34,7 @@ const expectNotMatches = (name, file, text, patterns) => {
 };
 
 const workflow = read(files.workflow);
+const releaseWorkflow = read(files.releaseWorkflow);
 const docs = read(files.docs);
 const docsChecklist = read(files.docsChecklist);
 const readme = read(files.readme);
@@ -55,6 +57,27 @@ expectNotMatches("manual dry run", files.workflow, workflow, [
   /docker\/build-push-action/i,
   /^\s*docker\s+push\b/im,
   /^\s*push:\s*true\s*$/im,
+]);
+
+expectIncludes("release workflow", files.releaseWorkflow, releaseWorkflow, [
+  "name: Docker Publish Release",
+  "workflow_dispatch:",
+  "DOCKER_PUBLISH_ENABLED",
+  "publish",
+  "inputs.publish",
+  "packages: write",
+]);
+
+expectNotMatches("release workflow", files.releaseWorkflow, releaseWorkflow, [
+  /^\s+push:\s*$/m,
+  /^\s+pull_request:\s*$/m,
+  /docker\s+push-action/i,
+]);
+
+expectIncludes("release publish guard", files.releaseWorkflow, releaseWorkflow, [
+  "${{ inputs.publish }}",
+  "vars.DOCKER_PUBLISH_ENABLED == 'true'",
+  "docker push",
 ]);
 
 expectIncludes("publishing policy", files.docs, docs, [
