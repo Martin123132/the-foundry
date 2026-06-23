@@ -1,0 +1,60 @@
+name: Docker publish readiness
+description: Record the explicit approval checklist for enabling image publishing
+title: "[Ops]: Docker publishing readiness decision"
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Use this template only when the project is ready to move issue #9 from
+        non-publishing prep to real publish planning.
+  - type: textarea
+    id: issue
+    attributes:
+      label: Issue reference
+      description: Include the tracking issue number or equivalent.
+      value: "#9"
+    validations:
+      required: true
+  - type: input
+    id: registry
+    attributes:
+      label: Registry
+      description: Confirm official registry (for example, ghcr.io/martin123132/the-foundry)
+      placeholder: ghcr.io/martin123132/the-foundry
+    validations:
+      required: true
+  - type: checkboxes
+    id: access
+    attributes:
+      label: Access & permissions
+      description: Confirm these are true before enabling publish
+      options:
+        - label: Repository package write permissions granted to GitHub Actions
+        - label: Release trigger policy approved (release tags / release event / manual approval)
+        - label: Tag policy agreed (version + sha; latest decision documented)
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Pre-publish checks
+      options:
+        - label: Manual dry-run workflow passed
+        - label: `/api/meta` smoke test passed
+        - label: `npm run verify:docker-policy` passes
+        - label: README and deployment docs updated for official pull commands
+    validations:
+      required: true
+  - type: textarea
+    id: release_notes
+    attributes:
+      label: Release notes / context
+      description: Include planned release version, approver name, and any rollout notes.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: >
+        Follow the source of truth:
+        [docs/DOCKER_PUBLISHING.md](https://github.com/Martin123132/the-foundry/blob/main/docs/DOCKER_PUBLISHING.md)
+        and
+        [docs/DOCKER_PUBLISHING_CHECKLIST.md](https://github.com/Martin123132/the-foundry/blob/main/docs/DOCKER_PUBLISHING_CHECKLIST.md)
