@@ -74,6 +74,12 @@ Owner approval date: ______________
 When all fields are complete, add the publishing workflow, gate it to the approved
 trigger only, and close issue #9.
 
+## Concrete Readiness Checklist
+
+See the full, fillable checklist in:
+
+- [docs/DOCKER_PUBLISHING_CHECKLIST.md](DOCKER_PUBLISHING_CHECKLIST.md)
+
 ## Dry Run
 
 Run the manual **Docker Publish Dry Run** workflow from GitHub Actions. It:
