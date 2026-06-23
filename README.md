@@ -114,14 +114,22 @@ http://127.0.0.1:4174
 
 Docker stores SQLite data in the `foundry-data` volume mounted at `/data`.
 CI currently builds and smoke-runs the image without publishing it. When a
-release publishing flow is enabled, the intended image tag is:
+release publishing flow is intentionally enabled, the intended image tag is:
 
 ```text
 ghcr.io/martin123132/the-foundry:<version-or-commit>
 ```
 
 See [docs/DOCKER_PUBLISHING.md](docs/DOCKER_PUBLISHING.md) for the publishing
-policy, checklist, and non-publishing dry-run workflow.
+policy, checklist, and non-publishing dry-run workflow. Publication is
+controlled with the repository variable:
+
+```text
+DOCKER_PUBLISH_ENABLED=true
+```
+
+When approved, use the runbook in that doc for the `publish=false` validation
+run and the final `publish=true` release run.
 
 ## Deployment
 
