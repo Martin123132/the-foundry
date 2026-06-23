@@ -131,6 +131,14 @@ DOCKER_PUBLISH_ENABLED=true
 When approved, use the runbook in that doc for the `publish=false` validation
 run and the final `publish=true` release run.
 
+Expected first-release example:
+
+```text
+Tag: v0.1.0
+Image: ghcr.io/martin123132/the-foundry:v0.1.0
+SHA tag: ghcr.io/martin123132/the-foundry:<commit-sha>
+```
+
 ## Deployment
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for production notes, environment variables,
