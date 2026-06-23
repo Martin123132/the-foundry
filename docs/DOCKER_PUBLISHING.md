@@ -110,6 +110,9 @@ Do not publish from ordinary branch pushes or pull requests.
 
 When ready to do an approved release publish:
 
+> This workflow is intentionally blocked until issue #9 is approved by the project
+> owner and `DOCKER_PUBLISH_ENABLED=true` is set in repository variables.
+
 1. Confirm open-source policy/docs:
 
 - `docs/DOCKER_PUBLISHING_CHECKLIST.md`
