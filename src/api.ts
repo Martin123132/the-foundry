@@ -50,6 +50,11 @@ export const api = {
     }),
   listResponses: (id: string) =>
     request<ResponseRecord[]>(`/api/forms/${id}/responses`),
+  deleteResponses: (id: string, responseIds: string[]) =>
+    request<{ deleted: number }>(`/api/forms/${id}/responses`, {
+      method: 'DELETE',
+      body: JSON.stringify({ responseIds }),
+    }),
   submitResponse: (id: string, payload: SubmitPayload) =>
     request<{ ok: true; responseId: string }>(`/api/forms/${id}/responses`, {
       method: 'POST',

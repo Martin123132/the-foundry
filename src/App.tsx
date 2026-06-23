@@ -95,6 +95,10 @@ function AdminApp() {
   const [responses, setResponses] = useState<ResponseRecord[]>([])
   const [responseQuery, setResponseQuery] = useState('')
   const [responseFilter, setResponseFilter] = useState<ResponseFilter>('all')
+  const [selectedResponseIds, setSelectedResponseIds] = useState<Set<string>>(
+    () => new Set(),
+  )
+  const [responseActionBusy, setResponseActionBusy] = useState(false)
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -109,6 +113,7 @@ function AdminApp() {
   const [error, setError] = useState('')
   const saveTokenRef = useRef(0)
   const definitionImportRef = useRef<HTMLInputElement>(null)
+  const selectAllResponsesRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let active = true
@@ -164,6 +169,7 @@ function AdminApp() {
         setResponses(nextResponses)
         setResponseQuery('')
         setResponseFilter('all')
+        setSelectedResponseIds(new Set())
         setSelectedFieldId(nextForm.fields[0]?.id ?? null)
         setDirty(false)
         setSaveState('saved')
@@ -238,6 +244,25 @@ function AdminApp() {
       })
     })
   }, [normalizedResponseQuery, orderedFields, responseFilter, responses])
+  const visibleResponseIds = useMemo(
+    () => filteredResponses.map((response) => response.id),
+    [filteredResponses],
+  )
+  const selectedResponseCount = selectedResponseIds.size
+  const selectedVisibleCount = visibleResponseIds.filter((id) =>
+    selectedResponseIds.has(id),
+  ).length
+  const allVisibleResponsesSelected =
+    visibleResponseIds.length > 0 && selectedVisibleCount === visibleResponseIds.length
+  const someVisibleResponsesSelected =
+    selectedVisibleCount > 0 && !allVisibleResponsesSelected
+
+  useEffect(() => {
+    if (selectAllResponsesRef.current) {
+      selectAllResponsesRef.current.indeterminate = someVisibleResponsesSelected
+    }
+  }, [someVisibleResponsesSelected])
+
   const shareUrl = form ? `${window.location.origin}/f/${form.id}` : ''
   const embedCode = form
     ? `<iframe src="${shareUrl}" title="${form.title}" style="width:100%;height:720px;border:0;border-radius:8px"></iframe>`
@@ -610,6 +635,92 @@ function AdminApp() {
     }
     const nextResponses = await api.listResponses(form.id)
     setResponses(nextResponses)
+    setSelectedResponseIds(new Set())
+  }
+
+  function toggleResponseSelection(responseId: string, checked: boolean) {
+    setSelectedResponseIds((current) => {
+      const next = new Set(current)
+      if (checked) {
+        next.add(responseId)
+      } else {
+        next.delete(responseId)
+      }
+      return next
+    })
+  }
+
+  function toggleVisibleResponseSelection() {
+    setSelectedResponseIds((current) => {
+      const next = new Set(current)
+      if (allVisibleResponsesSelected) {
+        for (const responseId of visibleResponseIds) {
+          next.delete(responseId)
+        }
+      } else {
+        for (const responseId of visibleResponseIds) {
+          next.add(responseId)
+        }
+      }
+      return next
+    })
+  }
+
+  function clearResponseSelection() {
+    setSelectedResponseIds(new Set())
+  }
+
+  async function deleteSelectedResponses() {
+    if (!form || selectedResponseIds.size === 0) {
+      return
+    }
+
+    const responseIds = [...selectedResponseIds]
+    const count = responseIds.length
+    const confirmed = window.confirm(
+      `Delete ${count} selected response${count === 1 ? '' : 's'}? This cannot be undone.`,
+    )
+    if (!confirmed) {
+      return
+    }
+
+    setResponseActionBusy(true)
+    setError('')
+    try {
+      const result = await api.deleteResponses(form.id, responseIds)
+      const deletedIds = new Set(responseIds)
+      setResponses((items) => items.filter((item) => !deletedIds.has(item.id)))
+      setForms((items) =>
+        items.map((item) =>
+          item.id === form.id
+            ? {
+                ...item,
+                responseCount: Math.max(0, item.responseCount - result.deleted),
+              }
+            : item,
+        ),
+      )
+      setForm((current) =>
+        current?.id === form.id
+          ? {
+              ...current,
+              responseCount: Math.max(0, current.responseCount - result.deleted),
+            }
+          : current,
+      )
+      setSelectedResponseIds(new Set())
+      setNotice(
+        `${result.deleted} response${result.deleted === 1 ? '' : 's'} deleted`,
+      )
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : 'Could not delete selected responses',
+      )
+    } finally {
+      setResponseActionBusy(false)
+    }
   }
 
   async function exportFormDefinition() {
@@ -658,6 +769,38 @@ function AdminApp() {
     }
   }
 
+  function exportVisibleResponsesCsv() {
+    if (!form) {
+      return
+    }
+
+    const headers = ['submitted_at', ...orderedFields.map((field) => field.label)]
+    const lines = [
+      headers.map(csvCell).join(','),
+      ...filteredResponses.map((response) =>
+        [
+          response.createdAt,
+          ...orderedFields.map((field) =>
+            responseCsvValue(response.answers[field.id]),
+          ),
+        ]
+          .map(csvCell)
+          .join(','),
+      ),
+    ]
+
+    downloadTextFile(
+      `${lines.join('\n')}\n`,
+      'text/csv;charset=utf-8',
+      `${slugifyFileName(form.title)}-responses.csv`,
+    )
+    setNotice(
+      `${filteredResponses.length} visible response${
+        filteredResponses.length === 1 ? '' : 's'
+      } exported as CSV`,
+    )
+  }
+
   function exportVisibleResponsesJson() {
     if (!form) {
       return
@@ -703,17 +846,11 @@ function AdminApp() {
         })),
       })),
     }
-    const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], {
-      type: 'application/json',
-    })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${slugifyFileName(form.title)}-responses.json`
-    document.body.append(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
+    downloadTextFile(
+      `${JSON.stringify(payload, null, 2)}\n`,
+      'application/json',
+      `${slugifyFileName(form.title)}-responses.json`,
+    )
     setNotice(`${filteredResponses.length} responses exported as JSON`)
   }
 
@@ -1058,7 +1195,9 @@ function AdminApp() {
             <div className="section-title">
               <div>
                 <p>Responses</p>
-                <h2>{responses.length} submissions</h2>
+                <h2>
+                  {responses.length} submission{responses.length === 1 ? '' : 's'}
+                </h2>
               </div>
               <div className="inline-actions">
                 <button
@@ -1069,15 +1208,20 @@ function AdminApp() {
                 >
                   <BarChart3 size={17} aria-hidden="true" />
                 </button>
-                <a className="button ghost" href={api.exportCsvUrl(form.id)}>
+                <button
+                  type="button"
+                  className="button ghost"
+                  onClick={exportVisibleResponsesCsv}
+                  disabled={filteredResponses.length === 0}
+                >
                   <Download size={16} aria-hidden="true" />
                   CSV
-                </a>
+                </button>
                 <button
                   type="button"
                   className="button ghost"
                   onClick={exportVisibleResponsesJson}
-                  disabled={responses.length === 0}
+                  disabled={filteredResponses.length === 0}
                 >
                   <FileText size={16} aria-hidden="true" />
                   JSON
@@ -1131,10 +1275,56 @@ function AdminApp() {
               </span>
             </div>
 
+            {responses.length > 0 ? (
+              <div className="response-bulk-bar" aria-live="polite">
+                <span className="response-bulk-summary">
+                  {selectedResponseCount} selected
+                </span>
+                <div className="response-bulk-actions">
+                  <button
+                    type="button"
+                    className="button ghost"
+                    onClick={toggleVisibleResponseSelection}
+                    disabled={filteredResponses.length === 0 || responseActionBusy}
+                  >
+                    {allVisibleResponsesSelected ? 'Clear visible' : 'Select visible'}
+                  </button>
+                  <button
+                    type="button"
+                    className="button ghost"
+                    onClick={clearResponseSelection}
+                    disabled={selectedResponseCount === 0 || responseActionBusy}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    className="button danger"
+                    onClick={() => void deleteSelectedResponses()}
+                    disabled={selectedResponseCount === 0 || responseActionBusy}
+                  >
+                    <Trash2 size={16} aria-hidden="true" />
+                    Delete selected
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="response-table-wrap">
               <table className="response-table">
                 <thead>
                   <tr>
+                    <th className="response-select-column">
+                      <input
+                        ref={selectAllResponsesRef}
+                        className="response-checkbox"
+                        type="checkbox"
+                        aria-label="Select all visible responses"
+                        checked={allVisibleResponsesSelected}
+                        disabled={filteredResponses.length === 0 || responseActionBusy}
+                        onChange={() => toggleVisibleResponseSelection()}
+                      />
+                    </th>
                     <th>Submitted</th>
                     <th>Answers</th>
                   </tr>
@@ -1142,15 +1332,47 @@ function AdminApp() {
                 <tbody>
                   {responses.length === 0 ? (
                     <tr>
-                      <td colSpan={2}>No responses yet</td>
+                      <td colSpan={3}>
+                        <span className="response-empty-state">
+                          <strong>No responses yet</strong>
+                          <span>New submissions will appear here.</span>
+                        </span>
+                      </td>
                     </tr>
                   ) : filteredResponses.length === 0 ? (
                     <tr>
-                      <td colSpan={2}>No responses match this search or filter</td>
+                      <td colSpan={3}>
+                        <span className="response-empty-state">
+                          <strong>No matching responses</strong>
+                          <span>Try another search or filter.</span>
+                        </span>
+                      </td>
                     </tr>
                   ) : (
                     filteredResponses.map((response) => (
-                      <tr key={response.id}>
+                      <tr
+                        key={response.id}
+                        className={
+                          selectedResponseIds.has(response.id) ? 'selected' : ''
+                        }
+                      >
+                        <td className="response-select-cell">
+                          <input
+                            className="response-checkbox"
+                            type="checkbox"
+                            aria-label={`Select response submitted ${new Date(
+                              response.createdAt,
+                            ).toLocaleString()}`}
+                            checked={selectedResponseIds.has(response.id)}
+                            disabled={responseActionBusy}
+                            onChange={(event) =>
+                              toggleResponseSelection(
+                                response.id,
+                                event.target.checked,
+                              )
+                            }
+                          />
+                        </td>
                         <td>{new Date(response.createdAt).toLocaleString()}</td>
                         <td>
                           {orderedFields.map((field) => (
@@ -2245,4 +2467,32 @@ function slugifyFileName(value: string) {
       .replace(/^-|-$/g, '')
       .slice(0, 60) || 'the-foundry'
   )
+}
+
+function responseCsvValue(value: AnswerValue | undefined) {
+  if (Array.isArray(value)) {
+    return value.join('; ')
+  }
+
+  return value ?? ''
+}
+
+function csvCell(value: string | number) {
+  const text = String(value)
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`
+  }
+  return text
+}
+
+function downloadTextFile(contents: string, type: string, fileName: string) {
+  const blob = new Blob([contents], { type })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  document.body.append(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
 }

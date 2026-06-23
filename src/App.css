@@ -940,6 +940,31 @@
   font-weight: 730;
 }
 
+.response-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 14px 0;
+  padding: 10px;
+  background: #f9fbfb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.response-bulk-summary {
+  color: var(--text-strong);
+  font-size: 0.8rem;
+  font-weight: 780;
+}
+
+.response-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .response-table-wrap {
   overflow: auto;
 }
@@ -962,6 +987,39 @@
   color: var(--muted);
   font-size: 0.74rem;
   text-transform: uppercase;
+}
+
+.response-table tr.selected {
+  background: #f0fbfa;
+}
+
+.response-select-column,
+.response-select-cell {
+  width: 44px;
+  text-align: center;
+}
+
+.response-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--teal);
+}
+
+.response-empty-state {
+  display: grid;
+  gap: 3px;
+  padding: 8px 0;
+}
+
+.response-empty-state strong {
+  color: var(--text-strong);
+  font-size: 0.9rem;
+}
+
+.response-empty-state span {
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .answer-pill {
@@ -1571,6 +1629,16 @@
 
   .response-filter button {
     white-space: normal;
+  }
+
+  .response-bulk-bar,
+  .response-bulk-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .response-bulk-actions .button {
+    width: 100%;
   }
 
   .field-block {

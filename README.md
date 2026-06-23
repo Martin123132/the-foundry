@@ -15,6 +15,7 @@ vendor lock-in, or handing their data to another subscription service.
 - Guide users through draft, launch, sharing, and response review
 - Collect responses into local SQLite storage
 - Search and filter collected responses
+- Select and bulk-delete responses during local cleanup
 - Export responses as CSV or structured JSON
 - Import and export full form definitions between installs
 - Configure webhook delivery for downstream workflows
@@ -50,6 +51,15 @@ For local development with Vite:
 ```powershell
 npm run dev
 ```
+
+## First Five Minutes
+
+1. Create a form from a starter template or add a few questions by hand.
+2. Publish it and open the public runner from the sharing panel.
+3. Submit a test response so the workflow has real data.
+4. Return to the admin view, search or filter responses, then export visible
+   rows as CSV or JSON.
+5. Select test responses and delete them when the trial run is finished.
 
 ## Data Storage
 

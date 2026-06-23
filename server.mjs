@@ -153,6 +153,12 @@ async function handleApi(request, response, url) {
       return
     }
 
+    if (parts[3] === 'responses' && request.method === 'DELETE') {
+      const body = await readJson(request)
+      sendJson(response, 200, deleteResponses(formId, body))
+      return
+    }
+
     if (parts[3] === 'responses' && request.method === 'POST') {
       const ip = request.socket.remoteAddress || 'unknown'
       if (!allowRequest(formId, ip)) {
@@ -418,6 +424,38 @@ function listResponses(formId) {
       answers: JSON.parse(row.answers_json),
       createdAt: row.created_at,
     }))
+}
+
+function deleteResponses(formId, body) {
+  if (!getForm(formId)) {
+    throw new HttpError(404, 'Form not found')
+  }
+
+  const responseIds = Array.isArray(body?.responseIds)
+    ? [
+        ...new Set(
+          body.responseIds.filter(
+            (id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,120}$/.test(id),
+          ),
+        ),
+      ]
+    : []
+
+  if (responseIds.length === 0) {
+    throw new HttpError(400, 'Select at least one response to delete')
+  }
+
+  if (responseIds.length > 500) {
+    throw new HttpError(400, 'Delete at most 500 responses at a time')
+  }
+
+  const statement = db.prepare('DELETE FROM responses WHERE form_id = ? AND id = ?')
+  let deleted = 0
+  for (const responseId of responseIds) {
+    deleted += statement.run(formId, responseId).changes
+  }
+
+  return { deleted }
 }
 
 function sendCsv(response, formId) {
