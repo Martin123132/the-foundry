@@ -61,6 +61,9 @@ smoke-runs the image but does not publish it. If image publishing is enabled,
 use predictable tags such as `ghcr.io/martin123132/the-foundry:<version>` and
 `ghcr.io/martin123132/the-foundry:<commit-sha>`.
 
+Publishing remains disabled until issue `#9` is approved and repository variable
+`DOCKER_PUBLISH_ENABLED=true` is set.
+
 See [docs/DOCKER_PUBLISHING.md](docs/DOCKER_PUBLISHING.md) before enabling any
 registry push workflow.
 
