@@ -14,6 +14,8 @@ const host = process.env.HOST || '127.0.0.1'
 const port = Number(process.env.PORT || 4174)
 const rateWindowMs = 60_000
 const rateLimit = new Map()
+const defaultSuccessMessage = 'Thanks, your response was recorded.'
+const defaultClosedMessage = 'This form is not accepting responses right now.'
 const validFieldTypes = new Set([
   'short_text',
   'long_text',
@@ -41,6 +43,7 @@ db.exec(`
     background_color TEXT NOT NULL,
     text_color TEXT NOT NULL,
     success_message TEXT NOT NULL,
+    closed_message TEXT NOT NULL DEFAULT 'This form is not accepting responses right now.',
     webhook_url TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
@@ -64,6 +67,7 @@ db.exec(`
   );
 `)
 
+ensureFormSchema()
 seedDatabase()
 
 const mimeTypes = {
@@ -96,6 +100,18 @@ const server = createServer(async (request, response) => {
     })
   }
 })
+
+function ensureFormSchema() {
+  const columns = new Set(
+    db.prepare('PRAGMA table_info(forms)').all().map((column) => column.name),
+  )
+
+  if (!columns.has('closed_message')) {
+    db.exec(
+      `ALTER TABLE forms ADD COLUMN closed_message TEXT NOT NULL DEFAULT '${defaultClosedMessage}'`,
+    )
+  }
+}
 
 server.listen(port, host, () => {
   console.log(`The Foundry running at http://${host}:${port}`)
@@ -222,8 +238,8 @@ function createForm() {
     `
     INSERT INTO forms (
       id, title, description, status, mode, accent_color, background_color,
-      text_color, success_message, webhook_url, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      text_color, success_message, closed_message, webhook_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
   ).run(
     formId,
@@ -234,7 +250,8 @@ function createForm() {
     '#087f7a',
     '#f7f8f8',
     '#1f2937',
-    'Thanks, your response was recorded.',
+    defaultSuccessMessage,
+    defaultClosedMessage,
     '',
     now,
     now,
@@ -262,8 +279,8 @@ function importFormDefinition(body) {
     `
     INSERT INTO forms (
       id, title, description, status, mode, accent_color, background_color,
-      text_color, success_message, webhook_url, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      text_color, success_message, closed_message, webhook_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
   ).run(
     formId,
@@ -275,6 +292,7 @@ function importFormDefinition(body) {
     definition.backgroundColor,
     definition.textColor,
     definition.successMessage,
+    definition.closedMessage,
     '',
     now,
     now,
@@ -337,6 +355,7 @@ function saveForm(formId, body) {
       background_color = ?,
       text_color = ?,
       success_message = ?,
+      closed_message = ?,
       webhook_url = ?,
       updated_at = ?
     WHERE id = ?
@@ -349,7 +368,8 @@ function saveForm(formId, body) {
     cleanColor(body.accentColor, '#087f7a'),
     cleanColor(body.backgroundColor, '#f7f8f8'),
     cleanColor(body.textColor, '#1f2937'),
-    cleanText(body.successMessage, 'Thanks, your response was recorded.'),
+    cleanText(body.successMessage, defaultSuccessMessage),
+    cleanText(body.closedMessage, defaultClosedMessage),
     cleanText(body.webhookUrl, ''),
     now,
     formId,
@@ -521,6 +541,7 @@ function buildFormDefinition(form) {
       backgroundColor: form.backgroundColor,
       textColor: form.textColor,
       successMessage: form.successMessage,
+      closedMessage: form.closedMessage,
       fields: form.fields.map((field, index) => ({
         type: field.type,
         label: field.label,
@@ -543,7 +564,8 @@ function rowToFormSummary(row) {
     accentColor: row.accent_color,
     backgroundColor: row.background_color,
     textColor: row.text_color,
-    successMessage: row.success_message,
+    successMessage: row.success_message || defaultSuccessMessage,
+    closedMessage: row.closed_message || defaultClosedMessage,
     webhookUrl: row.webhook_url,
     fields: [],
     responseCount: Number(row.response_count || 0),
@@ -657,8 +679,8 @@ function seedDatabase() {
     `
     INSERT INTO forms (
       id, title, description, status, mode, accent_color, background_color,
-      text_color, success_message, webhook_url, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      text_color, success_message, closed_message, webhook_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
   ).run(
     formId,
@@ -670,6 +692,7 @@ function seedDatabase() {
     '#ffffff',
     '#1f2937',
     'Thanks. Your feedback is in the vault.',
+    defaultClosedMessage,
     '',
     now,
     now,
@@ -742,7 +765,12 @@ function normalizeFormDefinition(body) {
     successMessage: optionalImportText(
       form.successMessage,
       500,
-      'Thanks, your response was recorded.',
+      defaultSuccessMessage,
+    ),
+    closedMessage: optionalImportText(
+      form.closedMessage,
+      500,
+      defaultClosedMessage,
     ),
     fields: form.fields.map((field, index) => normalizeImportField(field, index)),
   }

@@ -11,6 +11,7 @@ const baseForm = {
   backgroundColor: '#ffffff',
   textColor: '#1f2937',
   successMessage: 'Accessibility smoke submitted.',
+  closedMessage: 'This smoke form is closed.',
   webhookUrl: '',
   fields: [
     {
@@ -93,6 +94,8 @@ test('admin shell supports keyboard reorder and has no axe violations', async ({
   await page.goto('/')
   await page.getByRole('button', { name: `${form.title}, draft, 0 responses` }).click()
   await expect(page.getByRole('heading', { name: '2 questions' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Live' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Draft', exact: true })).toBeEnabled()
 
   await page.locator('.field-stack')
     .getByRole('button', { name: 'Move What should we call you? down' })
@@ -108,6 +111,38 @@ test('admin shell supports keyboard reorder and has no axe violations', async ({
 
   const saved = await (await request.get(`/api/forms/${form.id}`)).json()
   expect(saved.fields[1].label).toBe('What should we call you?')
+})
+
+test('public runner shows closed copy and draft preview without saving', async ({
+  page,
+  request,
+}) => {
+  const form = await createSmokeForm(request, {
+    title: 'Closed runner smoke',
+    status: 'draft',
+    closedMessage: 'We are polishing this form before launch.',
+    successMessage: 'Preview success copy.',
+  })
+
+  await page.goto(`/f/${form.id}`)
+  await expect(page.getByRole('heading', { name: 'Submissions are closed' })).toBeVisible()
+  await expect(page.getByText('We are polishing this form before launch.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Submit' })).toHaveCount(0)
+  await expectNoAxeViolations(page)
+
+  await page.goto(`/f/${form.id}?preview=1`)
+  await expect(page.getByRole('status')).toContainText(
+    'Preview mode - responses are not saved',
+  )
+  await page.getByRole('textbox', { name: /What should we call you/ }).fill('Ada')
+  await page.getByRole('button', { name: 'Next' }).click()
+  await page.getByRole('button', { name: '5 out of 5' }).click()
+  await page.getByRole('button', { name: 'Submit' }).click()
+  await expect(page.getByRole('heading', { name: 'Preview success copy.' })).toBeVisible()
+  await expect(page.getByText('Preview complete. No response was saved.')).toBeVisible()
+
+  const responses = await (await request.get(`/api/forms/${form.id}/responses`)).json()
+  expect(responses).toHaveLength(0)
 })
 
 test('admin response workflow supports selection, bulk delete, and has no axe violations', async ({
@@ -203,6 +238,8 @@ test('public runner exposes progress, required errors, and pressed states', asyn
     'aria-pressed',
     'true',
   )
+  await page.getByRole('button', { name: 'Submit' }).click()
+  await expect(page.getByRole('heading', { name: form.successMessage })).toBeVisible()
 
   await expectNoAxeViolations(page)
 })

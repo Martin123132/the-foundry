@@ -12,12 +12,14 @@ vendor lock-in, or handing their data to another subscription service.
 - Start from common templates for contact, events, feedback, bugs, leads, and internal requests
 - Reorder questions with keyboard-friendly controls and drag handles
 - Publish controlled public form links and iframe embeds
+- Preview live, draft, and compact public runner states before sharing
 - Guide users through draft, launch, sharing, and response review
 - Collect responses into local SQLite storage
 - Search and filter collected responses
 - Select and bulk-delete responses during local cleanup
 - Export responses as CSV or structured JSON
 - Import and export full form definitions between installs
+- Tune success and closed-form messages for public visitors
 - Configure webhook delivery for downstream workflows
 - Inspect storage, environment, and default form settings in the admin UI
 - Run locally, on a small server, or in Docker
@@ -55,8 +57,8 @@ npm run dev
 ## First Five Minutes
 
 1. Create a form from a starter template or add a few questions by hand.
-2. Publish it and open the public runner from the sharing panel.
-3. Submit a test response so the workflow has real data.
+2. Pick a theme preset, check the draft or compact preview, then publish it.
+3. Open the live public runner from the sharing panel and submit a test response.
 4. Return to the admin view, search or filter responses, then export visible
    rows as CSV or JSON.
 5. Select test responses and delete them when the trial run is finished.

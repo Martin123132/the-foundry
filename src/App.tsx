@@ -77,6 +77,33 @@ import type {
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 type ResponseFilter = 'all' | 'complete' | 'needs_answer'
 
+const themePresets = [
+  {
+    name: 'Foundry',
+    accentColor: '#087f7a',
+    backgroundColor: '#f7f8f8',
+    textColor: '#1f2937',
+  },
+  {
+    name: 'Signal',
+    accentColor: '#315c85',
+    backgroundColor: '#f4f8fb',
+    textColor: '#132235',
+  },
+  {
+    name: 'Field',
+    accentColor: '#6f7c38',
+    backgroundColor: '#fbfbf1',
+    textColor: '#232818',
+  },
+  {
+    name: 'Launch',
+    accentColor: '#b64232',
+    backgroundColor: '#fff7f5',
+    textColor: '#2b1713',
+  },
+]
+
 function App() {
   const formMatch = window.location.pathname.match(/^\/f\/([^/]+)/)
 
@@ -627,6 +654,29 @@ function AdminApp() {
   async function copySettingValue(value: string, label: string) {
     const copied = await writeClipboardText(value)
     setNotice(copied ? `${label} copied` : `Select ${label.toLowerCase()} to copy`)
+  }
+
+  async function openRunnerPreview(kind: 'live' | 'draft' | 'compact') {
+    if (!form) {
+      return
+    }
+
+    if (kind === 'live' && !isPublished) {
+      setNotice('Publish the form before opening the live runner')
+      return
+    }
+
+    if (dirty) {
+      await saveCurrent(form, { silent: true })
+    }
+
+    const query =
+      kind === 'live'
+        ? ''
+        : kind === 'compact'
+          ? '?preview=1&frame=compact'
+          : '?preview=1'
+    window.open(`/f/${form.id}${query}`, '_blank')
   }
 
   async function refreshResponses() {
@@ -1478,6 +1528,36 @@ function AdminApp() {
               <Copy size={16} aria-hidden="true" />
               Copy embed
             </button>
+            <div className="preview-actions" aria-label="Preview public form">
+              <button
+                type="button"
+                className="button ghost"
+                onClick={() => void openRunnerPreview('live')}
+                disabled={!isPublished}
+              >
+                <Eye size={16} aria-hidden="true" />
+                Live
+              </button>
+              <button
+                type="button"
+                className="button ghost"
+                onClick={() => void openRunnerPreview('draft')}
+              >
+                <FileText size={16} aria-hidden="true" />
+                Draft
+              </button>
+              <button
+                type="button"
+                className="button ghost"
+                onClick={() => void openRunnerPreview('compact')}
+              >
+                <Sparkles size={16} aria-hidden="true" />
+                Compact
+              </button>
+            </div>
+            <p className="preview-note">
+              Draft and compact previews do not save responses.
+            </p>
           </section>
 
           <DefinitionTransfer
@@ -1494,6 +1574,29 @@ function AdminApp() {
                 <h2>Presentation</h2>
               </div>
               <Palette size={18} aria-hidden="true" />
+            </div>
+            <div className="theme-presets" aria-label="Theme presets">
+              {themePresets.map((preset) => (
+                <button
+                  key={preset.name}
+                  type="button"
+                  className="theme-preset-button"
+                  onClick={() =>
+                    patchForm({
+                      accentColor: preset.accentColor,
+                      backgroundColor: preset.backgroundColor,
+                      textColor: preset.textColor,
+                    })
+                  }
+                >
+                  <span className="theme-preset-swatches" aria-hidden="true">
+                    <span style={{ background: preset.accentColor }} />
+                    <span style={{ background: preset.backgroundColor }} />
+                    <span style={{ background: preset.textColor }} />
+                  </span>
+                  {preset.name}
+                </button>
+              ))}
             </div>
             <ThemeControl
               label="Accent"
@@ -1565,6 +1668,16 @@ function AdminApp() {
                 rows={3}
                 onChange={(event) =>
                   patchForm({ successMessage: event.target.value })
+                }
+              />
+            </label>
+            <label className="field-label">
+              Closed message
+              <textarea
+                value={form.closedMessage}
+                rows={3}
+                onChange={(event) =>
+                  patchForm({ closedMessage: event.target.value })
                 }
               />
             </label>
@@ -2004,6 +2117,9 @@ function OperationsSettings({
 }
 
 function PublicForm({ formId }: { formId: string }) {
+  const previewParams = new URLSearchParams(window.location.search)
+  const isPreview = previewParams.get('preview') === '1'
+  const isCompactPreview = previewParams.get('frame') === 'compact'
   const [form, setForm] = useState<FormRecord | null>(null)
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
@@ -2041,6 +2157,7 @@ function PublicForm({ formId }: { formId: string }) {
 
   const orderedFields = useMemo(() => sortFields(form?.fields ?? []), [form])
   const currentField = orderedFields[step]
+  const hasFields = orderedFields.length > 0
 
   useEffect(() => {
     const target = runnerQuestionRef.current?.querySelector<
@@ -2072,6 +2189,10 @@ function PublicForm({ formId }: { formId: string }) {
 
   async function submit(event?: FormEvent) {
     event?.preventDefault()
+    if (!hasFields) {
+      setError('Add at least one question before collecting responses.')
+      return
+    }
     if (!validateAll()) {
       setError('Please answer all required questions.')
       return
@@ -2080,7 +2201,9 @@ function PublicForm({ formId }: { formId: string }) {
     setSubmitting(true)
     setError('')
     try {
-      await api.submitResponse(formId, { answers, honeypot })
+      if (!isPreview) {
+        await api.submitResponse(formId, { answers, honeypot })
+      }
       setSubmitted(true)
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Could not submit')
@@ -2097,12 +2220,22 @@ function PublicForm({ formId }: { formId: string }) {
     return <StatusScreen title="Form not found" body="This form does not exist." />
   }
 
-  if (form.status !== 'published') {
+  if (form.status !== 'published' && !isPreview) {
     return (
-      <StatusScreen
-        title="Submissions are closed"
-        body="This form is still a draft. Ask the owner to publish it before sharing this link."
-      />
+      <div
+        className="public-shell"
+        style={{
+          background: form.backgroundColor,
+          color: form.textColor,
+          ['--runner-accent' as string]: form.accentColor,
+        }}
+      >
+        <section className="success-state closed-state">
+          <Circle size={42} color={form.accentColor} aria-hidden="true" />
+          <h1>Submissions are closed</h1>
+          <p>{form.closedMessage}</p>
+        </section>
+      </div>
     )
   }
 
@@ -2113,12 +2246,13 @@ function PublicForm({ formId }: { formId: string }) {
         style={{
           background: form.backgroundColor,
           color: form.textColor,
+          ['--runner-accent' as string]: form.accentColor,
         }}
       >
         <section className="success-state">
           <CheckCircle2 size={42} color={form.accentColor} aria-hidden="true" />
           <h1>{form.successMessage}</h1>
-          <p>{form.title}</p>
+          <p>{isPreview ? 'Preview complete. No response was saved.' : form.title}</p>
           <a className="button primary" href="/">
             Back to studio
           </a>
@@ -2129,7 +2263,7 @@ function PublicForm({ formId }: { formId: string }) {
 
   return (
     <div
-      className="public-shell"
+      className={`public-shell ${isCompactPreview ? 'compact-preview' : ''}`}
       style={{
         background: form.backgroundColor,
         color: form.textColor,
@@ -2138,6 +2272,11 @@ function PublicForm({ formId }: { formId: string }) {
     >
       <form className="runner" onSubmit={(event) => void submit(event)}>
         <header className="runner-header">
+          {isPreview ? (
+            <p className="preview-ribbon" role="status">
+              Preview mode - responses are not saved
+            </p>
+          ) : null}
           <a className="back-link" href="/">
             <ArrowLeft size={16} aria-hidden="true" />
             Studio
@@ -2198,7 +2337,12 @@ function PublicForm({ formId }: { formId: string }) {
           aria-hidden="true"
         />
 
-        {form.mode === 'classic' ? (
+        {orderedFields.length === 0 ? (
+          <div className="runner-empty-state" role="status">
+            <strong>No questions yet</strong>
+            <span>Add a question in the studio before sharing this form.</span>
+          </div>
+        ) : form.mode === 'classic' ? (
           <div className="classic-stack" ref={runnerQuestionRef}>
             {orderedFields.map((field) => (
               <RunnerField
@@ -2229,7 +2373,7 @@ function PublicForm({ formId }: { formId: string }) {
               <button
                 type="button"
                 className="button ghost"
-                disabled={step === 0}
+                  disabled={step === 0 || !hasFields}
                 onClick={() => setStep((current) => Math.max(current - 1, 0))}
               >
                 <ArrowLeft size={16} aria-hidden="true" />
@@ -2251,14 +2395,22 @@ function PublicForm({ formId }: { formId: string }) {
                   <ArrowRight size={16} aria-hidden="true" />
                 </button>
               ) : (
-                <button type="submit" className="button primary" disabled={submitting}>
+                <button
+                  type="submit"
+                  className="button primary"
+                  disabled={submitting || !hasFields}
+                >
                   <Send size={16} aria-hidden="true" />
                   {submitting ? 'Sending' : 'Submit'}
                 </button>
               )}
             </>
           ) : (
-            <button type="submit" className="button primary" disabled={submitting}>
+            <button
+              type="submit"
+              className="button primary"
+              disabled={submitting || !hasFields}
+            >
               <Send size={16} aria-hidden="true" />
               {submitting ? 'Sending' : 'Submit'}
             </button>

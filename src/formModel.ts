@@ -20,6 +20,7 @@ export interface FormTemplate {
   formDescription: string;
   mode: FormMode;
   accentColor: string;
+  closedMessage?: string;
   successMessage: string;
   fields: TemplateField[];
 }
@@ -337,6 +338,8 @@ export function applyTemplate(form: FormRecord, template: FormTemplate): FormRec
     description: template.formDescription,
     mode: template.mode,
     accentColor: template.accentColor,
+    closedMessage:
+      template.closedMessage ?? 'This form is not accepting responses right now.',
     successMessage: template.successMessage,
     fields: template.fields.map((field, index) => ({
       id: newId('field'),

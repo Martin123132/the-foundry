@@ -1145,6 +1145,23 @@
   font-size: 0.78rem;
 }
 
+.preview-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.preview-actions .button {
+  padding: 0 8px;
+}
+
+.preview-note {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
 .definition-transfer {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1176,6 +1193,42 @@
 .theme-control input[type='color'] {
   height: 40px;
   padding: 3px;
+}
+
+.theme-presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.theme-preset-button {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 9px;
+  color: var(--text-strong);
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 760;
+}
+
+.theme-preset-button:hover {
+  border-color: var(--border-strong);
+}
+
+.theme-preset-swatches {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  width: 44px;
+  height: 22px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .ops-stack {
@@ -1334,6 +1387,31 @@
   padding: 24px;
 }
 
+.public-shell.compact-preview {
+  padding: 14px;
+}
+
+.compact-preview .runner {
+  width: min(420px, 100%);
+  padding: 20px;
+}
+
+.compact-preview .runner-header h1 {
+  font-size: 1.55rem;
+}
+
+.preview-ribbon {
+  width: fit-content;
+  margin: 0;
+  padding: 5px 9px;
+  color: #095b57;
+  background: var(--teal-soft);
+  border: 1px solid #b7dfdc;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 780;
+}
+
 .runner {
   display: grid;
   gap: 22px;
@@ -1440,6 +1518,20 @@
   left: -10000px;
   width: 1px;
   height: 1px;
+}
+
+.runner-empty-state {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  color: #4b5563;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+.runner-empty-state strong {
+  color: #111827;
 }
 
 .runner-field,
@@ -1639,6 +1731,11 @@
 
   .response-bulk-actions .button {
     width: 100%;
+  }
+
+  .preview-actions,
+  .theme-presets {
+    grid-template-columns: 1fr;
   }
 
   .field-block {

@@ -33,6 +33,7 @@ export interface FormRecord {
   backgroundColor: string
   textColor: string
   successMessage: string
+  closedMessage: string
   webhookUrl: string
   fields: FormField[]
   responseCount: number
@@ -77,6 +78,7 @@ export interface FormDefinitionPayload {
     backgroundColor: string
     textColor: string
     successMessage: string
+    closedMessage?: string
     fields: FormDefinitionField[]
   }
 }
