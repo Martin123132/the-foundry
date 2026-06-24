@@ -12,7 +12,8 @@ Examples that require a commercial license:
 - using the-foundry materials to train, fine-tune, distill, evaluate, benchmark, or improve a commercial AI model or commercial AI system;
 - distributing a modified commercial version of the-foundry.
 
-Commercial license requests should include:
+Commercial license discussions should be directed to the COO of TWO HANDS
+NETWORK LTD. Commercial license requests should include:
 
 - who will use the-foundry;
 - whether the use is internal, distributed, hosted, or embedded;

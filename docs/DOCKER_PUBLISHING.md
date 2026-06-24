@@ -49,7 +49,7 @@ Before enabling a real publishing workflow:
 - Decide whether publishing happens from release tags, GitHub Releases, or a
   manual approval workflow.
 - Decide whether `latest` should be published, and from which release source.
-- Confirm the image remains AGPL-3.0-or-later and public.
+- Confirm the image remains PolyForm Noncommercial licensed and public.
 - Confirm no private URLs, secrets, datasets, or local paths are copied into the
   Docker context.
 - Run the non-publishing dry run and verify the built image smoke test passes.
@@ -121,7 +121,7 @@ When ready to do an approved release publish:
 > This workflow is intentionally blocked unless `DOCKER_PUBLISH_ENABLED=true` is
 > set in repository variables and `publish=true` is selected in the manual run.
 
-1. Confirm open-source policy/docs:
+1. Confirm source-available policy/docs:
 
 - `docs/DOCKER_PUBLISHING_CHECKLIST.md`
 - `docs/DOCKER_PUBLISHING.md`

@@ -1,6 +1,6 @@
 # The Foundry
 
-The Foundry is an open-source, self-hosted forms and response workflow studio.
+The Foundry is a source-available, self-hosted forms and response workflow studio.
 It is built for people who want Typeform-style polish without response caps,
 vendor lock-in, or handing their data to another subscription service.
 
@@ -176,6 +176,10 @@ npm run serve    Build, then start the production server
 
 ## License
 
-The Foundry is licensed under AGPL-3.0-or-later. If you improve it for a hosted
-service, share those improvements back with the people who made the commons
-valuable in the first place.
+The Foundry is available for personal and non-commercial use under the
+PolyForm Noncommercial License 1.0.0. Commercial use requires a separate
+written license from TWO HANDS NETWORK LTD.
+
+See [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and
+[COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md). Commercial licensing discussions
+should be directed to the COO of TWO HANDS NETWORK LTD.
