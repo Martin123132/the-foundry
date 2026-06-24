@@ -113,30 +113,32 @@ http://127.0.0.1:4174
 ```
 
 Docker stores SQLite data in the `foundry-data` volume mounted at `/data`.
-CI currently builds and smoke-runs the image without publishing it. When a
-release publishing flow is intentionally enabled, the intended image tag is:
+The public GHCR image is available as:
 
 ```text
-ghcr.io/martin123132/the-foundry:<version-or-commit>
+ghcr.io/martin123132/the-foundry:v0.1.0
 ```
 
-See [docs/DOCKER_PUBLISHING.md](docs/DOCKER_PUBLISHING.md) for the publishing
-policy, checklist, and non-publishing dry-run workflow. Publication is
+Pull and run it directly:
+
+```powershell
+docker pull ghcr.io/martin123132/the-foundry:v0.1.0
+docker run --rm -p 4174:4174 -v foundry-data:/data ghcr.io/martin123132/the-foundry:v0.1.0
+```
+
+The first published image also has an immutable commit SHA tag:
+
+```text
+ghcr.io/martin123132/the-foundry:cbaab6b4f130d3d13e4ae57c7772d272e95d5078
+```
+
+No `latest` tag is published yet. See
+[docs/DOCKER_PUBLISHING.md](docs/DOCKER_PUBLISHING.md) for the guarded release
+policy, dry-run workflow, and future publish runbook. Publication remains
 controlled with the repository variable:
 
 ```text
 DOCKER_PUBLISH_ENABLED=true
-```
-
-When approved, use the runbook in that doc for the `publish=false` validation
-run and the final `publish=true` release run.
-
-Expected first-release example:
-
-```text
-Tag: v0.1.0
-Image: ghcr.io/martin123132/the-foundry:v0.1.0
-SHA tag: ghcr.io/martin123132/the-foundry:<commit-sha>
 ```
 
 ## Deployment

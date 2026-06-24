@@ -56,13 +56,22 @@ Back up the Docker volume named `openforms_foundry-data` or the host path you
 mount at `/data`.
 
 The production image runs as the non-root `node` user, stores SQLite files in
-`/data`, and exposes a healthcheck against `/api/meta`. CI builds and
-smoke-runs the image but does not publish it. If image publishing is enabled,
-use predictable tags such as `ghcr.io/martin123132/the-foundry:<version>` and
+`/data`, and exposes a healthcheck against `/api/meta`. The public GHCR image
+uses predictable tags such as `ghcr.io/martin123132/the-foundry:<version>` and
 `ghcr.io/martin123132/the-foundry:<commit-sha>`.
 
-Publishing remains disabled until issue `#9` is approved and repository variable
-`DOCKER_PUBLISH_ENABLED=true` is set.
+The first published image is:
+
+```bash
+docker pull ghcr.io/martin123132/the-foundry:v0.1.0
+docker run -d --name the-foundry \
+  -p 4174:4174 \
+  -v foundry-data:/data \
+  ghcr.io/martin123132/the-foundry:v0.1.0
+```
+
+No `latest` tag is published yet. Future publishing remains gated by the manual
+release workflow and repository variable `DOCKER_PUBLISH_ENABLED=true`.
 
 See [docs/DOCKER_PUBLISHING.md](docs/DOCKER_PUBLISHING.md) before enabling any
 registry push workflow.

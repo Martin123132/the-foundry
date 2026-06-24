@@ -1,17 +1,19 @@
 # Docker Publishing Policy
 
-The Foundry can build and smoke-run a production Docker image, but image
-publishing is intentionally gated until the project owner confirms the registry
-and release policy.
+The Foundry builds, smoke-runs, and publishes production Docker images through a
+manual, gated GHCR release workflow.
 
 ## Current State
 
 - CI builds the image on every push and pull request.
 - CI smoke-runs the image with a persistent `/data` volume.
-- No workflow currently pushes an image to any registry.
 - A manual dry-run workflow can build the intended GHCR tags without publishing.
+- A manual release workflow can publish only when `publish=true` and repository
+  variable `DOCKER_PUBLISH_ENABLED=true` are both present.
+- The first public image was published as `v0.1.0` with an immutable commit SHA
+  tag. No `latest` tag is published yet.
 
-## Proposed Registry
+## Registry
 
 Use GitHub Container Registry:
 
@@ -31,6 +33,13 @@ ghcr.io/martin123132/the-foundry:<commit-sha>
 Only add `latest` for explicit stable releases after the release policy is
 confirmed.
 
+First published tags:
+
+```text
+ghcr.io/martin123132/the-foundry:v0.1.0
+ghcr.io/martin123132/the-foundry:cbaab6b4f130d3d13e4ae57c7772d272e95d5078
+```
+
 ## Publish Checklist
 
 Before enabling a real publishing workflow:
@@ -45,10 +54,10 @@ Before enabling a real publishing workflow:
   Docker context.
 - Run the non-publishing dry run and verify the built image smoke test passes.
 
-## Owner Decision Gate (Required for Closure)
+## Owner Decision Gate
 
-Issue #9 should move from "in progress" to "blocked/waiting on approval" until
-these fields are explicitly confirmed by the project owner:
+Before any future publish policy change, confirm these fields with the project
+owner:
 
 - Registry: `ghcr.io` confirmed (yes/no)
 - Package write permission granted to GitHub Actions for this repository (yes/no)
@@ -71,8 +80,8 @@ Tag policy:
 Owner approval date: ______________
 ```
 
-When all fields are complete, add the publishing workflow, gate it to the approved
-trigger only, and close issue #9.
+When all fields are complete, use the existing guarded release workflow and keep
+the approved trigger/tag policy documented here.
 
 ## Concrete Readiness Checklist
 
@@ -93,10 +102,9 @@ Run the manual **Docker Publish Dry Run** workflow from GitHub Actions. It:
 CI also runs `npm run verify:docker-policy` to check that the dry-run workflow
 stays manual, read-only for packages, and free of registry login or push steps.
 
-## Enabling Publishing Later
+## Publishing Future Releases
 
-When the registry and release policy are confirmed, use the guarded
-**Docker Publish Release** workflow:
+For future releases, use the guarded **Docker Publish Release** workflow:
 
 - Keep trigger as `workflow_dispatch` only.
 - Keep `DOCKER_PUBLISH_ENABLED=true` repo variable as the hard gate.
@@ -110,8 +118,8 @@ Do not publish from ordinary branch pushes or pull requests.
 
 When ready to do an approved release publish:
 
-> This workflow is intentionally blocked until issue #9 is approved by the project
-> owner and `DOCKER_PUBLISH_ENABLED=true` is set in repository variables.
+> This workflow is intentionally blocked unless `DOCKER_PUBLISH_ENABLED=true` is
+> set in repository variables and `publish=true` is selected in the manual run.
 
 1. Confirm open-source policy/docs:
 
@@ -128,7 +136,7 @@ gh workflow run docker-publish-dry-run.yml \
   -f include_latest=false
 ```
 
-3. Approve policy checks in the repo:
+3. Confirm policy checks in the repo:
 
 - set repository variable `DOCKER_PUBLISH_ENABLED=true`
 - if needed, define exact release tag and `latest` policy

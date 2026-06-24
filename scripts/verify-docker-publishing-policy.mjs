@@ -82,7 +82,9 @@ expectIncludes("release publish guard", files.releaseWorkflow, releaseWorkflow, 
 
 expectIncludes("publishing policy", files.docs, docs, [
   "# Docker Publishing Policy",
-  "No workflow currently pushes an image to any registry.",
+  "manual, gated GHCR release workflow",
+  "ghcr.io/martin123132/the-foundry:v0.1.0",
+  "No `latest` tag is published yet.",
   "Do not publish from ordinary branch pushes or pull requests.",
   "docker push",
   "GHCR",
