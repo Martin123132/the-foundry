@@ -5,6 +5,14 @@ export type GuideAction = 'save' | 'add-question' | 'publish' | 'preview' | 'exp
 export interface GuideStep {
   id: 'shape' | 'publish' | 'share' | 'collect' | 'export';
   label: string;
+  detail: string;
+  done: boolean;
+}
+
+export interface GuideSignal {
+  id: 'structure' | 'visibility' | 'responses';
+  label: string;
+  value: string;
   done: boolean;
 }
 
@@ -383,57 +391,118 @@ export function makeGuideState(
   responses: ResponseRecord[],
   dirty: boolean,
 ) {
-  const shaped = form.title.trim().length > 0 && fields.length > 0;
+  const hasTitle = form.title.trim().length > 0;
+  const shaped = hasTitle && fields.length > 0;
   const published = form.status === 'published';
   const collected = responses.length > 0;
+  const requiredCount = fields.filter((field) => field.required).length;
+  const questionLabel = `${fields.length} question${fields.length === 1 ? '' : 's'}`;
+  const responseLabel = `${responses.length} response${responses.length === 1 ? '' : 's'}`;
+
   const steps: GuideStep[] = [
-    { id: 'shape', label: 'Shape', done: shaped },
-    { id: 'publish', label: 'Publish', done: published },
-    { id: 'share', label: 'Share', done: published },
-    { id: 'collect', label: 'Collect', done: collected },
-    { id: 'export', label: 'Export', done: collected },
+    {
+      id: 'shape',
+      label: 'Shape',
+      detail: shaped ? `${questionLabel} mapped` : 'Template or first question needed',
+      done: shaped,
+    },
+    {
+      id: 'publish',
+      label: 'Publish',
+      detail: published ? 'Runner live' : 'Draft',
+      done: published,
+    },
+    {
+      id: 'share',
+      label: 'Share',
+      detail: published ? 'Link ready' : 'After publish',
+      done: published,
+    },
+    {
+      id: 'collect',
+      label: 'Collect',
+      detail: collected ? responseLabel : 'First response',
+      done: collected,
+    },
+    {
+      id: 'export',
+      label: 'Export',
+      detail: collected ? 'CSV and JSON' : 'After signal',
+      done: collected,
+    },
+  ];
+
+  const signals: GuideSignal[] = [
+    {
+      id: 'structure',
+      label: 'Structure',
+      value: shaped ? `${questionLabel}, ${requiredCount} required` : 'Needs shape',
+      done: shaped,
+    },
+    {
+      id: 'visibility',
+      label: 'Public state',
+      value: published ? 'Live' : 'Draft',
+      done: published,
+    },
+    {
+      id: 'responses',
+      label: 'Signal',
+      value: responseLabel,
+      done: collected,
+    },
   ];
 
   if (dirty) {
     return {
       steps,
+      signals,
       nextAction: 'save' as GuideAction,
       nextLabel: 'Save changes',
-      nextTitle: 'Autosave is watching',
+      nextTitle: 'Save the route',
+      nextBody: 'Lock in the latest edits before the launch path moves forward.',
     };
   }
 
   if (!shaped) {
     return {
       steps,
+      signals,
       nextAction: 'add-question' as GuideAction,
       nextLabel: 'Add question',
       nextTitle: 'Shape the form',
+      nextBody: 'Start from a template or add the first question to give this form a path.',
     };
   }
 
   if (!published) {
     return {
       steps,
+      signals,
       nextAction: 'publish' as GuideAction,
       nextLabel: 'Publish form',
       nextTitle: 'Open the gate',
+      nextBody: 'The draft is shaped. Publishing opens the public runner for responses.',
     };
   }
 
   if (!collected) {
     return {
       steps,
+      signals,
       nextAction: 'preview' as GuideAction,
-      nextLabel: 'Run preview',
+      nextLabel: 'Open runner',
       nextTitle: 'Walk the path',
+      nextBody: 'Run the public path and submit a test response before sharing wider.',
     };
   }
 
   return {
     steps,
+    signals,
     nextAction: 'export' as GuideAction,
     nextLabel: 'Export CSV',
     nextTitle: 'Package the signal',
+    nextBody: 'Responses are coming in. Export the visible set when you need a portable copy.',
   };
 }

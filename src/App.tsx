@@ -60,6 +60,7 @@ import {
   answerLabel,
   type FormTemplate,
   type GuideAction,
+  type GuideSignal,
   type GuideStep,
 } from './formModel'
 import type {
@@ -1102,7 +1103,9 @@ function AdminApp() {
           {guide ? (
             <GuidancePanel
               steps={guide.steps}
+              signals={guide.signals}
               nextTitle={guide.nextTitle}
+              nextBody={guide.nextBody}
               nextLabel={guide.nextLabel}
               nextAction={guide.nextAction}
               onAction={runGuideAction}
@@ -1695,18 +1698,23 @@ function AdminApp() {
 
 function GuidancePanel({
   steps,
+  signals,
   nextTitle,
+  nextBody,
   nextLabel,
   nextAction,
   onAction,
 }: {
   steps: GuideStep[]
+  signals: GuideSignal[]
   nextTitle: string
+  nextBody: string
   nextLabel: string
   nextAction: GuideAction
   onAction: (action: GuideAction) => Promise<void>
 }) {
   const completeCount = steps.filter((step) => step.done).length
+  const progressLabel = `${completeCount} of ${steps.length} launch checks ready`
 
   return (
     <section className="guide-panel">
@@ -1718,6 +1726,7 @@ function GuidancePanel({
           <div>
             <p>Launch path</p>
             <h2>{nextTitle}</h2>
+            <span>{progressLabel}</span>
           </div>
         </div>
         <button
@@ -1737,11 +1746,23 @@ function GuidancePanel({
           {nextLabel}
         </button>
       </div>
+      <p className="guide-next-copy">{nextBody}</p>
+      <ul className="guide-signals" aria-label="Launch readiness signals">
+        {signals.map((signal) => (
+          <li key={signal.id} className={signal.done ? 'done' : ''}>
+            <span>{signal.label}</span>
+            <strong>{signal.value}</strong>
+          </li>
+        ))}
+      </ul>
       <ol className="guide-steps" aria-label="Launch path progress">
         {steps.map((step, index) => (
           <li key={step.id} className={step.done ? 'done' : ''}>
             <GuideStepIcon id={step.id} done={step.done} />
-            <span>{step.label}</span>
+            <span>
+              <strong>{step.label}</strong>
+              <em>{step.detail}</em>
+            </span>
             <small>{index + 1}</small>
           </li>
         ))}

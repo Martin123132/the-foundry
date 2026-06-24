@@ -94,6 +94,12 @@ test('admin shell supports keyboard reorder and has no axe violations', async ({
   await page.goto('/')
   await page.getByRole('button', { name: `${form.title}, draft, 0 responses` }).click()
   await expect(page.getByRole('heading', { name: '2 questions' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Open the gate' })).toBeVisible()
+  await expect(page.getByText('1 of 5 launch checks ready')).toBeVisible()
+  await expect(page.getByText('2 questions, 2 required')).toBeVisible()
+  await expect(
+    page.getByText('The draft is shaped. Publishing opens the public runner for responses.'),
+  ).toBeVisible()
   await expect(page.getByRole('button', { name: 'Live' })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Draft', exact: true })).toBeEnabled()
 
