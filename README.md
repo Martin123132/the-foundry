@@ -148,6 +148,11 @@ DOCKER_PUBLISH_ENABLED=true
 See [DEPLOYMENT.md](DEPLOYMENT.md) for production notes, environment variables,
 Docker hosting, reverse proxy guidance, and backup targets.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes, published Docker image tags,
+and current unreleased changes.
+
 ## Deployment Notes
 
 The server is a small Node app that serves the built React frontend and owns the
