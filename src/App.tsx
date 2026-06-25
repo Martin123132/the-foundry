@@ -78,6 +78,8 @@ import type {
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 type ResponseFilter = 'all' | 'complete' | 'needs_answer'
 
+const demoTemplateId = 'customer-feedback'
+
 const themePresets = [
   {
     name: 'Foundry',
@@ -299,6 +301,11 @@ function AdminApp() {
     () => (form ? makeGuideState(form, orderedFields, responses, dirty) : null),
     [dirty, form, orderedFields, responses],
   )
+  const showFirstRunStarter =
+    form?.title === 'Launch feedback' &&
+    forms.length === 1 &&
+    responses.length === 0 &&
+    !dirty
   const saveStatusLabel =
     saveState === 'saving'
       ? 'Autosaving'
@@ -487,6 +494,61 @@ function AdminApp() {
         createError instanceof Error
           ? createError.message
           : 'Could not create form from template',
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function createDemoWorkspace() {
+    const template = formTemplates.find((item) => item.id === demoTemplateId)
+    if (!template) {
+      setError('Demo template is not available')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    try {
+      const created = await api.createForm()
+      const templated = {
+        ...applyTemplate(created, template),
+        title: 'Launch feedback demo',
+        description:
+          'A ready-made sample workspace with a published form and local demo responses.',
+        status: 'published' as FormStatus,
+      }
+      const saved = await api.saveForm(created.id, templated)
+      const demoResponses = makeDemoResponses(saved.fields)
+
+      for (const answers of demoResponses) {
+        await api.submitResponse(saved.id, { answers })
+      }
+
+      const [nextForms, nextForm, nextResponses] = await Promise.all([
+        api.listForms(),
+        api.getForm(saved.id),
+        api.listResponses(saved.id),
+      ])
+      setForms(nextForms)
+      setSelectedId(saved.id)
+      setForm(nextForm)
+      setResponses(nextResponses)
+      setResponseQuery('')
+      setResponseFilter('all')
+      setSelectedResponseIds(new Set())
+      setSelectedFieldId(nextForm.fields[0]?.id ?? null)
+      setDirty(false)
+      setSaveState('saved')
+      setLastSavedAt(nextForm.updatedAt)
+      setPastForms([])
+      setFutureForms([])
+      setNotice('Demo workspace created')
+    } catch (createError) {
+      setError(
+        createError instanceof Error
+          ? createError.message
+          : 'Could not create demo workspace',
       )
     } finally {
       setSaving(false)
@@ -939,11 +1001,13 @@ function AdminApp() {
 
   if (!form) {
     return (
-      <StatusScreen
-        title="No forms yet"
-        body="Create the first form to start collecting responses."
-        actionLabel="Create form"
-        onAction={createNewForm}
+      <FirstRunWorkspace
+        templates={formTemplates}
+        saving={saving}
+        error={error}
+        onCreateBlank={createNewForm}
+        onCreateDemo={createDemoWorkspace}
+        onCreateFromTemplate={createNewFormFromTemplate}
       />
     )
   }
@@ -957,7 +1021,7 @@ function AdminApp() {
           </div>
           <div>
             <p className="brand-name">The Foundry</p>
-            <p className="brand-subtitle">Open-source forms and response workflows</p>
+            <p className="brand-subtitle">Source-available forms and response workflows</p>
           </div>
         </div>
         <div className="topbar-actions">
@@ -1109,6 +1173,14 @@ function AdminApp() {
               nextLabel={guide.nextLabel}
               nextAction={guide.nextAction}
               onAction={runGuideAction}
+            />
+          ) : null}
+
+          {showFirstRunStarter ? (
+            <FirstRunStarterPanel
+              saving={saving}
+              onCreateDemo={createDemoWorkspace}
+              onCreateBlank={createNewForm}
             />
           ) : null}
 
@@ -1776,6 +1848,162 @@ function GuidancePanel({
         aria-valuenow={completeCount}
       >
         <span style={{ width: `${(completeCount / steps.length) * 100}%` }} />
+      </div>
+    </section>
+  )
+}
+
+function FirstRunWorkspace({
+  templates,
+  saving,
+  error,
+  onCreateBlank,
+  onCreateDemo,
+  onCreateFromTemplate,
+}: {
+  templates: FormTemplate[]
+  saving: boolean
+  error: string
+  onCreateBlank: () => Promise<void>
+  onCreateDemo: () => Promise<void>
+  onCreateFromTemplate: (template: FormTemplate) => Promise<void>
+}) {
+  return (
+    <main className="first-run-shell">
+      <section className="first-run-intro" aria-labelledby="first-run-title">
+        <div className="brand-mark large">
+          <ListChecks size={26} aria-hidden="true" />
+        </div>
+        <div>
+          <p>First run</p>
+          <h1 id="first-run-title">Start with a working path</h1>
+          <span>
+            Pick a starter, open a demo workspace, or begin from a blank form.
+          </span>
+        </div>
+      </section>
+      {error ? (
+        <div className="first-run-error" role="alert">
+          {error}
+        </div>
+      ) : null}
+
+      <section className="first-run-actions" aria-label="Recommended starts">
+        <button
+          type="button"
+          className="first-run-action primary"
+          onClick={() => void onCreateDemo()}
+          disabled={saving}
+        >
+          <Rocket size={19} aria-hidden="true" />
+          <span>
+            <strong>Open demo workspace</strong>
+            <small>Published sample form with local responses.</small>
+          </span>
+        </button>
+        <button
+          type="button"
+          className="first-run-action"
+          onClick={() => void onCreateBlank()}
+          disabled={saving}
+        >
+          <Plus size={19} aria-hidden="true" />
+          <span>
+            <strong>Blank form</strong>
+            <small>Start with one editable question.</small>
+          </span>
+        </button>
+      </section>
+
+      <section className="first-run-templates" aria-labelledby="first-run-templates-title">
+        <div className="section-title">
+          <div>
+            <p>Starter paths</p>
+            <h2 id="first-run-templates-title">Templates</h2>
+          </div>
+          <Sparkles size={18} aria-hidden="true" />
+        </div>
+        <div className="template-grid compact">
+          {templates.map((template) => (
+            <article className="template-card" key={template.id}>
+              <button
+                type="button"
+                className="template-button"
+                onClick={() => void onCreateFromTemplate(template)}
+                disabled={saving}
+              >
+                <span>
+                  <strong>{template.name}</strong>
+                  <small>{template.description}</small>
+                </span>
+                <span className="template-meta">
+                  {template.fields.length} fields
+                </span>
+              </button>
+              <button
+                type="button"
+                className="template-create-button"
+                onClick={() => void onCreateFromTemplate(template)}
+                disabled={saving}
+              >
+                <Plus size={15} aria-hidden="true" />
+                New
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+  )
+}
+
+function FirstRunStarterPanel({
+  saving,
+  onCreateDemo,
+  onCreateBlank,
+}: {
+  saving: boolean
+  onCreateDemo: () => Promise<void>
+  onCreateBlank: () => Promise<void>
+}) {
+  return (
+    <section className="first-run-panel" aria-labelledby="first-run-panel-title">
+      <div className="section-title">
+        <div>
+          <p>First run</p>
+          <h2 id="first-run-panel-title">Choose your starting route</h2>
+        </div>
+        <Compass size={18} aria-hidden="true" />
+      </div>
+      <p>
+        This install starts with a live feedback form. Add sample responses for a
+        quick product tour, or open a clean blank form.
+      </p>
+      <div className="first-run-actions compact">
+        <button
+          type="button"
+          className="first-run-action primary"
+          onClick={() => void onCreateDemo()}
+          disabled={saving}
+        >
+          <Rocket size={19} aria-hidden="true" />
+          <span>
+            <strong>Open demo workspace</strong>
+            <small>Creates a sample form with local responses.</small>
+          </span>
+        </button>
+        <button
+          type="button"
+          className="first-run-action"
+          onClick={() => void onCreateBlank()}
+          disabled={saving}
+        >
+          <Plus size={19} aria-hidden="true" />
+          <span>
+            <strong>Blank form</strong>
+            <small>Start fresh and shape your own route.</small>
+          </span>
+        </button>
       </div>
     </section>
   )
@@ -2630,6 +2858,70 @@ function responseHasEmptyAnswer(response: ResponseRecord, fields: FormField[]) {
 
     return String(value ?? '').trim() === ''
   })
+}
+
+function makeDemoResponses(fields: FormField[]): Array<Record<string, AnswerValue>> {
+  return [0, 1, 2].map((sampleIndex) => {
+    const answers: Record<string, AnswerValue> = {}
+
+    for (const field of fields) {
+      answers[field.id] = demoAnswerForField(field, sampleIndex)
+    }
+
+    return answers
+  })
+}
+
+function demoAnswerForField(field: FormField, sampleIndex: number): AnswerValue {
+  const shortText = ['Ada Lovelace', 'Grace Hopper', 'Katherine Johnson']
+  const emails = ['ada@example.test', 'grace@example.test', 'katherine@example.test']
+  const longText = [
+    'The guided launch path made the next step obvious.',
+    'Templates helped us get to a useful draft quickly.',
+    'The response workflow is easy to scan and export.',
+  ]
+  const improvements = [
+    'Add a few more handoff states for teams.',
+    'Make first-time sharing feel even more guided.',
+    'Add a compact report view for response summaries.',
+  ]
+
+  if (field.type === 'email') {
+    return emails[sampleIndex % emails.length]
+  }
+
+  if (field.type === 'number') {
+    return sampleIndex + 1
+  }
+
+  if (field.type === 'rating') {
+    return [5, 4, 5][sampleIndex % 3]
+  }
+
+  if (field.type === 'date') {
+    return `2026-06-${String(20 + sampleIndex).padStart(2, '0')}`
+  }
+
+  if (field.type === 'multi_choice') {
+    return field.options.length > 0
+      ? field.options.slice(0, Math.min(2, field.options.length))
+      : ['Sample choice']
+  }
+
+  if (isOptionField(field.type)) {
+    if (field.label.toLowerCase().includes('follow up')) {
+      return sampleIndex === 1 ? 'No' : 'Yes'
+    }
+    return field.options[sampleIndex % field.options.length] ?? 'Sample choice'
+  }
+
+  if (field.type === 'long_text') {
+    return field.label.toLowerCase().includes('improve')
+      ? improvements[sampleIndex % improvements.length]
+      : longText[sampleIndex % longText.length]
+  }
+
+  return shortText[sampleIndex % shortText.length]
 }
 
 function slugifyFileName(value: string) {

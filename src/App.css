@@ -1454,6 +1454,168 @@
   min-height: 100svh;
 }
 
+.first-run-shell {
+  display: grid;
+  align-content: center;
+  gap: 16px;
+  min-height: 100svh;
+  padding: 24px;
+  background: var(--surface);
+}
+
+.first-run-intro,
+.first-run-actions,
+.first-run-error,
+.first-run-templates {
+  width: min(980px, 100%);
+  margin: 0 auto;
+}
+
+.first-run-intro {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.first-run-intro p,
+.first-run-intro h1,
+.first-run-intro span {
+  margin: 0;
+}
+
+.first-run-intro p {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.first-run-intro h1 {
+  color: var(--text-strong);
+  font-size: 2rem;
+  letter-spacing: 0;
+}
+
+.first-run-intro span {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.first-run-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.first-run-error {
+  padding: 12px 14px;
+  color: #791d16;
+  background: #fff1ee;
+  border: 1px solid #f0c5bd;
+  border-radius: 8px;
+  font-weight: 720;
+}
+
+.first-run-action {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-height: 94px;
+  padding: 14px;
+  color: var(--text);
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.first-run-action.primary {
+  color: #ffffff;
+  background: var(--panel-strong);
+  border-color: var(--panel-strong);
+}
+
+.first-run-action:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.first-run-action svg {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  color: #0b5f5a;
+  background: var(--teal-soft);
+  border-radius: 8px;
+}
+
+.first-run-action.primary svg {
+  color: #101418;
+  background: #d9f3f1;
+}
+
+.first-run-action span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.first-run-action strong {
+  color: inherit;
+  font-size: 1rem;
+}
+
+.first-run-action small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.first-run-action.primary small {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.first-run-templates {
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.first-run-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.first-run-panel > p {
+  max-width: 70ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.first-run-actions.compact {
+  width: 100%;
+  margin: 0;
+}
+
+.first-run-actions.compact .first-run-action {
+  min-height: 82px;
+  box-shadow: none;
+}
+
 .status-screen {
   display: grid;
   place-content: center;
@@ -1790,11 +1952,25 @@
   }
 
   .add-field-grid,
+  .first-run-actions,
   .option-grid,
   .guide-signals,
   .guide-steps,
   .template-grid {
     grid-template-columns: 1fr;
+  }
+
+  .first-run-shell {
+    align-content: start;
+    padding: 14px;
+  }
+
+  .first-run-intro {
+    grid-template-columns: 1fr;
+  }
+
+  .first-run-intro h1 {
+    font-size: 1.62rem;
   }
 
   .guide-header {

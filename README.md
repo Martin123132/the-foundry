@@ -10,6 +10,7 @@ vendor lock-in, or handing their data to another subscription service.
 
 - Build forms with short text, long text, email, number, choice, rating, and date fields
 - Start from common templates for contact, events, feedback, bugs, leads, and internal requests
+- Open a demo workspace with sample responses for first-run testing
 - Reorder questions with keyboard-friendly controls and drag handles
 - Publish controlled public form links and iframe embeds
 - Preview live, draft, and compact public runner states before sharing
@@ -56,7 +57,8 @@ npm run dev
 
 ## First Five Minutes
 
-1. Create a form from a starter template or add a few questions by hand.
+1. Open the demo workspace to see a published form with sample responses, or
+   create a form from a starter template.
 2. Pick a theme preset, check the draft or compact preview, then publish it.
 3. Open the live public runner from the sharing panel and submit a test response.
 4. Return to the admin view, search or filter responses, then export visible

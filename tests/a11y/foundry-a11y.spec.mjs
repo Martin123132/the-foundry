@@ -82,6 +82,32 @@ async function expectNoAxeViolations(page) {
   expect(results.violations).toEqual([])
 }
 
+test('first-run workspace can create a demo form with sample responses', async ({
+  page,
+  request,
+}) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'Choose your starting route' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Open demo workspace/ })).toBeVisible()
+  await expect(page.getByText('This install starts with a live feedback form.')).toBeVisible()
+  await expectNoAxeViolations(page)
+
+  await page.getByRole('button', { name: /Open demo workspace/ }).click()
+  await expect(page.getByRole('textbox', { name: 'Form title' })).toHaveValue(
+    'Launch feedback demo',
+  )
+  await expect(page.getByText('Demo workspace created')).toBeVisible()
+  await expect(page.getByRole('heading', { name: '3 submissions' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Package the signal' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'CSV', exact: true })).toBeEnabled()
+  await expectNoAxeViolations(page)
+
+  const forms = await (await request.get('/api/forms')).json()
+  const demo = forms.find((form) => form.title === 'Launch feedback demo')
+  expect(demo).toBeTruthy()
+  expect(demo.responseCount).toBe(3)
+})
+
 test('admin shell supports keyboard reorder and has no axe violations', async ({
   page,
   request,
