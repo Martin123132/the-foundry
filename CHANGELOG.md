@@ -8,6 +8,10 @@ license from TWO HANDS NETWORK LTD.
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## v0.1.1 - 2026-06-26
+
 - Added a first-run route picker for fresh installs with demo workspace and
   blank-form starting paths.
 - Added a demo workspace seed flow that creates a published feedback form with
@@ -22,7 +26,8 @@ license from TWO HANDS NETWORK LTD.
   cleanup.
 - Added a first-tester checklist and README testing notes for release-readiness
   handoff.
-- No new Docker image has been published for these unreleased changes.
+- No new Docker image has been published for v0.1.1 yet. GHCR remains at
+  `ghcr.io/martin123132/the-foundry:v0.1.0`, and no `latest` tag is published.
 
 ## v0.1.0 - 2026-06-24
 
