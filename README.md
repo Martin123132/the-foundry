@@ -170,6 +170,7 @@ SQLite database. For a production deployment:
 npm run dev      Start the Vite dev server
 npm run build    Type-check and build the frontend
 npm run lint     Run ESLint
+npm run test:smoke Run first-tester rendered workflow smoke checks
 npm run test:a11y Run rendered Playwright/axe accessibility smoke checks
 npm run start    Start the production Node server
 npm run serve    Build, then start the production server

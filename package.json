@@ -12,6 +12,7 @@
     "start": "node server.mjs",
     "serve": "npm run build && node server.mjs",
     "test:a11y": "playwright test --config playwright.a11y.config.mjs",
+    "test:smoke": "node tests/smoke/first-tester-smoke.mjs",
     "verify:docker-policy": "node scripts/verify-docker-publishing-policy.mjs"
   },
   "dependencies": {

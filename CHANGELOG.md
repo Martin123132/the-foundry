@@ -17,6 +17,9 @@ license from TWO HANDS NETWORK LTD.
 - Updated visible product copy to use the current source-available positioning.
 - Isolated rendered accessibility test data per run to keep local and CI checks
   repeatable.
+- Added first-tester smoke coverage for demo setup, blank-form launch,
+  response export, definition import/export, public submission, and response
+  cleanup.
 - No new Docker image has been published for these unreleased changes.
 
 ## v0.1.0 - 2026-06-24
