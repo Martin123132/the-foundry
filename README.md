@@ -65,6 +65,8 @@ npm run dev
    rows as CSV or JSON.
 5. Select test responses and delete them when the trial run is finished.
 
+For a fuller first-tester pass, see [TESTING.md](TESTING.md).
+
 ## Data Storage
 
 By default, The Foundry stores data in:
@@ -153,6 +155,12 @@ Docker hosting, reverse proxy guidance, and backup targets.
 See [CHANGELOG.md](CHANGELOG.md) for release notes, published Docker image tags,
 and current unreleased changes.
 
+## Testing
+
+Use [TESTING.md](TESTING.md) for a manual first-tester checklist and the local
+validation commands. CI runs lint, build, first-tester smoke, accessibility
+smoke, Docker publishing policy checks, and Docker build/run smoke.
+
 ## Deployment Notes
 
 The server is a small Node app that serves the built React frontend and owns the
@@ -178,9 +186,9 @@ npm run serve    Build, then start the production server
 
 ## Roadmap
 
-- Response search, filtering, and JSON export polish
-- Stronger public sharing controls
-- Accessibility and keyboard QA passes
+- v0.1.1 first-tester polish and release-readiness cleanup
+- Optional future Docker image publish policy update for `latest`
+- Additional response reporting and summary views
 
 ## License
 

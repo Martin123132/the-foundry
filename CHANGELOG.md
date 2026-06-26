@@ -20,6 +20,8 @@ license from TWO HANDS NETWORK LTD.
 - Added first-tester smoke coverage for demo setup, blank-form launch,
   response export, definition import/export, public submission, and response
   cleanup.
+- Added a first-tester checklist and README testing notes for release-readiness
+  handoff.
 - No new Docker image has been published for these unreleased changes.
 
 ## v0.1.0 - 2026-06-24

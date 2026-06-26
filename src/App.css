@@ -575,12 +575,10 @@
 }
 
 .guide-signals strong {
-  overflow: hidden;
   color: #ffffff;
   font-size: 0.9rem;
   font-weight: 760;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
 }
 
 .guide-steps {
@@ -595,15 +593,20 @@
 .guide-steps li {
   position: relative;
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  gap: 8px;
-  align-items: center;
-  min-height: 48px;
-  padding: 10px 34px 10px 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  align-content: start;
+  min-height: 74px;
+  padding: 10px;
   color: rgba(255, 255, 255, 0.72);
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
+}
+
+.guide-steps li > svg {
+  width: 16px;
+  height: 16px;
 }
 
 .guide-steps li.done {
@@ -617,22 +620,22 @@
   gap: 3px;
   min-width: 0;
   overflow: hidden;
+  padding-right: 20px;
 }
 
 .guide-steps strong {
   overflow: hidden;
   color: inherit;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   font-weight: 780;
-  text-overflow: ellipsis;
-  white-space: normal;
+  line-height: 1.15;
 }
 
 .guide-steps em {
   display: -webkit-box;
   overflow: hidden;
   color: rgba(255, 255, 255, 0.58);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-style: normal;
   font-weight: 650;
   line-height: 1.2;
@@ -646,11 +649,11 @@
 
 .guide-steps small {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 8px;
+  right: 8px;
   display: grid;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   place-items: center;
   color: rgba(255, 255, 255, 0.62);
   font-size: 0.72rem;
@@ -1132,12 +1135,14 @@
   align-content: start;
   gap: 12px;
   max-height: calc(100svh - 104px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .inspector-section {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 
 .inspector-stack {
@@ -1159,6 +1164,7 @@
 .theme-control input,
 .theme-control select,
 .share-box input {
+  min-width: 0;
   min-height: 40px;
   padding: 9px 10px;
 }
@@ -1189,6 +1195,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 38px;
   gap: 8px;
+  min-width: 0;
 }
 
 .share-status {
@@ -1243,6 +1250,7 @@
 }
 
 .preview-actions .button {
+  min-width: 0;
   padding: 0 8px;
 }
 
@@ -1261,6 +1269,7 @@
 
 .definition-transfer .button {
   justify-content: center;
+  min-width: 0;
   min-height: 40px;
 }
 
@@ -1400,10 +1409,13 @@
 }
 
 .embed-code {
+  max-width: 100%;
+  min-width: 0;
   min-height: 88px;
   font-family: var(--mono);
   font-size: 0.76rem;
   line-height: 1.45;
+  resize: vertical;
 }
 
 .segmented-control {
