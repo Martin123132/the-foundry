@@ -8,8 +8,8 @@ license from TWO HANDS NETWORK LTD.
 
 ## Unreleased
 
-- Added a generated Foundry workbench wallpaper and subtle background layers for
-  the studio, first-run, status, and public runner surfaces.
+- Added generated Foundry workbench and guided-path wallpapers, with subtle
+  background layers for the studio, first-run, status, and public runner surfaces.
 
 ## v0.1.1 - 2026-06-26
 

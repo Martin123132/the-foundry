@@ -2,7 +2,7 @@
   min-height: 100svh;
   background:
     linear-gradient(180deg, rgba(247, 248, 248, 0.96), rgba(247, 248, 248, 0.91)),
-    var(--foundry-wallpaper);
+    var(--foundry-studio-wallpaper);
   background-position: center;
   background-size: cover;
 }
@@ -1477,8 +1477,8 @@
   min-height: 100svh;
   padding: 24px;
   background:
-    linear-gradient(115deg, rgba(247, 248, 248, 0.97) 0%, rgba(247, 248, 248, 0.9) 54%, rgba(247, 248, 248, 0.78) 100%),
-    var(--foundry-wallpaper);
+    linear-gradient(115deg, rgba(247, 248, 248, 0.94) 0%, rgba(247, 248, 248, 0.84) 54%, rgba(247, 248, 248, 0.68) 100%),
+    var(--foundry-runner-wallpaper);
   background-position: center;
   background-size: cover;
 }
@@ -1643,8 +1643,8 @@
   padding: 24px;
   text-align: center;
   background:
-    linear-gradient(135deg, rgba(247, 248, 248, 0.95), rgba(247, 248, 248, 0.78)),
-    var(--foundry-wallpaper);
+    linear-gradient(135deg, rgba(247, 248, 248, 0.94), rgba(247, 248, 248, 0.74)),
+    var(--foundry-runner-wallpaper);
   background-position: center;
   background-size: cover;
 }
@@ -1664,8 +1664,8 @@
   place-items: center;
   padding: 24px;
   background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.48)),
-    var(--foundry-wallpaper);
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.38) 54%, rgba(255, 255, 255, 0.16) 100%),
+    var(--foundry-runner-wallpaper);
   background-position: center;
   background-size: cover;
 }
@@ -1704,6 +1704,7 @@
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
 }
 
 .runner-header {
@@ -1926,6 +1927,7 @@
   background: rgba(255, 255, 255, 0.94);
   border-radius: 8px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
 }
 
 .success-state h1 {
