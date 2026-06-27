@@ -10,6 +10,8 @@ license from TWO HANDS NETWORK LTD.
 
 - Added generated Foundry workbench and guided-path wallpapers, with subtle
   background layers for the studio, first-run, status, and public runner surfaces.
+- Added a generated completion-path wallpaper and sharper submitted/closed state
+  treatments for public forms.
 
 ## v0.1.1 - 2026-06-26
 

@@ -1670,6 +1670,18 @@
   background-size: cover;
 }
 
+.public-shell.submitted-shell {
+  background-image:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.42) 54%, rgba(255, 255, 255, 0.12) 100%),
+    var(--foundry-complete-wallpaper);
+}
+
+.public-shell.closed-shell {
+  background-image:
+    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.76), rgba(255, 241, 238, 0.46) 56%, rgba(255, 241, 238, 0.18) 100%),
+    var(--foundry-runner-wallpaper);
+}
+
 .public-shell.compact-preview {
   padding: 14px;
 }
@@ -1918,16 +1930,49 @@
 }
 
 .success-state {
+  position: relative;
   display: grid;
   justify-items: center;
   gap: 14px;
   width: min(560px, 100%);
   padding: 36px;
+  overflow: hidden;
   text-align: center;
   background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
+}
+
+.success-state::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  content: "";
+  background: var(--runner-accent, var(--teal));
+}
+
+.closed-state::before {
+  background: var(--coral);
+}
+
+.state-icon {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  color: var(--runner-accent, var(--teal));
+  background: color-mix(in srgb, var(--runner-accent, var(--teal)) 14%, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--runner-accent, var(--teal)) 30%, transparent);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.state-icon.closed {
+  color: #8a3b2f;
+  background: #fff1ee;
+  border-color: #f3c1b9;
 }
 
 .success-state h1 {

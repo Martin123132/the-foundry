@@ -2472,7 +2472,7 @@ function PublicForm({ formId }: { formId: string }) {
   if (form.status !== 'published' && !isPreview) {
     return (
       <div
-        className="public-shell"
+        className="public-shell closed-shell"
         style={{
           backgroundColor: form.backgroundColor,
           color: form.textColor,
@@ -2480,7 +2480,9 @@ function PublicForm({ formId }: { formId: string }) {
         }}
       >
         <section className="success-state closed-state">
-          <Circle size={42} color={form.accentColor} aria-hidden="true" />
+          <span className="state-icon closed">
+            <Circle size={34} aria-hidden="true" />
+          </span>
           <h1>Submissions are closed</h1>
           <p>{form.closedMessage}</p>
         </section>
@@ -2491,15 +2493,17 @@ function PublicForm({ formId }: { formId: string }) {
   if (submitted) {
     return (
       <div
-        className="public-shell"
+        className="public-shell submitted-shell"
         style={{
           backgroundColor: form.backgroundColor,
           color: form.textColor,
           ['--runner-accent' as string]: form.accentColor,
         }}
       >
-        <section className="success-state">
-          <CheckCircle2 size={42} color={form.accentColor} aria-hidden="true" />
+        <section className="success-state submitted-state">
+          <span className="state-icon submitted">
+            <CheckCircle2 size={34} aria-hidden="true" />
+          </span>
           <h1>{form.successMessage}</h1>
           <p>{isPreview ? 'Preview complete. No response was saved.' : form.title}</p>
           <a className="button primary" href="/">

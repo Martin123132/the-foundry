@@ -16,6 +16,7 @@
   --shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
   --foundry-studio-wallpaper: url('/backgrounds/foundry-workbench-wallpaper.jpg');
   --foundry-runner-wallpaper: url('/backgrounds/foundry-runner-path-wallpaper.jpg');
+  --foundry-complete-wallpaper: url('/backgrounds/foundry-complete-path-wallpaper.jpg');
   --foundry-wallpaper: var(--foundry-studio-wallpaper);
   --sans: Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
