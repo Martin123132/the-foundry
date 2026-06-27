@@ -2474,7 +2474,7 @@ function PublicForm({ formId }: { formId: string }) {
       <div
         className="public-shell"
         style={{
-          background: form.backgroundColor,
+          backgroundColor: form.backgroundColor,
           color: form.textColor,
           ['--runner-accent' as string]: form.accentColor,
         }}
@@ -2493,7 +2493,7 @@ function PublicForm({ formId }: { formId: string }) {
       <div
         className="public-shell"
         style={{
-          background: form.backgroundColor,
+          backgroundColor: form.backgroundColor,
           color: form.textColor,
           ['--runner-accent' as string]: form.accentColor,
         }}
@@ -2514,7 +2514,7 @@ function PublicForm({ formId }: { formId: string }) {
     <div
       className={`public-shell ${isCompactPreview ? 'compact-preview' : ''}`}
       style={{
-        background: form.backgroundColor,
+        backgroundColor: form.backgroundColor,
         color: form.textColor,
         ['--runner-accent' as string]: form.accentColor,
       }}

@@ -14,6 +14,7 @@
   --amber: #f5b841;
   --danger: #c24135;
   --shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+  --foundry-wallpaper: url('/backgrounds/foundry-workbench-wallpaper.jpg');
   --sans: Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
