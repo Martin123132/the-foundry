@@ -8,6 +8,8 @@ license from TWO HANDS NETWORK LTD.
 
 ## Unreleased
 
+- Added public background mood controls so form creators can choose guided,
+  clean, workbench, or completion-bright runner surfaces.
 - Added generated Foundry workbench and guided-path wallpapers, with subtle
   background layers for the studio, first-run, status, and public runner surfaces.
 - Added a generated completion-path wallpaper and sharper submitted/closed state

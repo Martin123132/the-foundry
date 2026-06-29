@@ -72,6 +72,7 @@ import type {
   FormMode,
   FormRecord,
   FormStatus,
+  RunnerBackgroundMood,
   ResponseRecord,
 } from './types'
 
@@ -79,6 +80,7 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 type ResponseFilter = 'all' | 'complete' | 'needs_answer'
 
 const demoTemplateId = 'customer-feedback'
+const defaultRunnerBackgroundMood: RunnerBackgroundMood = 'guided'
 
 const themePresets = [
   {
@@ -86,24 +88,55 @@ const themePresets = [
     accentColor: '#087f7a',
     backgroundColor: '#f7f8f8',
     textColor: '#1f2937',
+    runnerBackgroundMood: 'guided' as RunnerBackgroundMood,
   },
   {
     name: 'Signal',
     accentColor: '#315c85',
     backgroundColor: '#f4f8fb',
     textColor: '#132235',
+    runnerBackgroundMood: 'clean' as RunnerBackgroundMood,
   },
   {
     name: 'Field',
     accentColor: '#6f7c38',
     backgroundColor: '#fbfbf1',
     textColor: '#232818',
+    runnerBackgroundMood: 'workbench' as RunnerBackgroundMood,
   },
   {
     name: 'Launch',
     accentColor: '#b64232',
     backgroundColor: '#fff7f5',
     textColor: '#2b1713',
+    runnerBackgroundMood: 'complete' as RunnerBackgroundMood,
+  },
+]
+
+const runnerBackgroundMoods: Array<{
+  id: RunnerBackgroundMood
+  label: string
+  description: string
+}> = [
+  {
+    id: 'guided',
+    label: 'Guided path',
+    description: 'Route lines and checkpoints for active forms.',
+  },
+  {
+    id: 'clean',
+    label: 'Clean light',
+    description: 'Quiet surface for formal or low-noise forms.',
+  },
+  {
+    id: 'workbench',
+    label: 'Workbench',
+    description: 'Builder texture for internal or operational forms.',
+  },
+  {
+    id: 'complete',
+    label: 'Completion bright',
+    description: 'A finished path with a brighter checkpoint mood.',
   },
 ]
 
@@ -1661,6 +1694,7 @@ function AdminApp() {
                       accentColor: preset.accentColor,
                       backgroundColor: preset.backgroundColor,
                       textColor: preset.textColor,
+                      runnerBackgroundMood: preset.runnerBackgroundMood,
                     })
                   }
                 >
@@ -1668,11 +1702,50 @@ function AdminApp() {
                     <span style={{ background: preset.accentColor }} />
                     <span style={{ background: preset.backgroundColor }} />
                     <span style={{ background: preset.textColor }} />
+                    <span
+                      className={`mood-swatch ${runnerBackgroundMoodClass(
+                        preset.runnerBackgroundMood,
+                      )}`}
+                    />
                   </span>
                   {preset.name}
                 </button>
               ))}
             </div>
+            <fieldset className="background-mood-field">
+              <legend>Public mood</legend>
+              <div className="background-mood-grid">
+                {runnerBackgroundMoods.map((mood) => {
+                  const checked =
+                    (form.runnerBackgroundMood ?? defaultRunnerBackgroundMood) === mood.id
+
+                  return (
+                    <label
+                      key={mood.id}
+                      className={`background-mood-card ${checked ? 'active' : ''}`}
+                    >
+                      <input
+                        type="radio"
+                        name="runner-background-mood"
+                        value={mood.id}
+                        checked={checked}
+                        onChange={() => patchForm({ runnerBackgroundMood: mood.id })}
+                      />
+                      <span
+                        className={`background-mood-preview ${runnerBackgroundMoodClass(
+                          mood.id,
+                        )}`}
+                        aria-hidden="true"
+                      />
+                      <span>
+                        <strong>{mood.label}</strong>
+                        <small>{mood.description}</small>
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            </fieldset>
             <ThemeControl
               label="Accent"
               value={form.accentColor}
@@ -2236,8 +2309,8 @@ function DefinitionTransfer({
         />
       </div>
       <p className="definition-note">
-        Moves questions, copy, mode, and colors. Responses and webhook URLs stay out
-        of the export.
+        Moves questions, copy, mode, colors, and public mood. Responses and webhook
+        URLs stay out of the export.
       </p>
     </section>
   )
@@ -2355,6 +2428,10 @@ function OperationsSettings({
                   <span style={{ background: meta.defaults.textColor }} />
                 </dd>
               </div>
+              <div>
+                <dt>Public mood</dt>
+                <dd>{runnerBackgroundMoodLabel(meta.defaults.runnerBackgroundMood)}</dd>
+              </div>
             </dl>
           </div>
         </div>
@@ -2407,6 +2484,9 @@ function PublicForm({ formId }: { formId: string }) {
   const orderedFields = useMemo(() => sortFields(form?.fields ?? []), [form])
   const currentField = orderedFields[step]
   const hasFields = orderedFields.length > 0
+  const runnerMoodClass = runnerBackgroundMoodClass(
+    form?.runnerBackgroundMood ?? defaultRunnerBackgroundMood,
+  )
 
   useEffect(() => {
     const target = runnerQuestionRef.current?.querySelector<
@@ -2472,7 +2552,7 @@ function PublicForm({ formId }: { formId: string }) {
   if (form.status !== 'published' && !isPreview) {
     return (
       <div
-        className="public-shell closed-shell"
+        className={`public-shell closed-shell ${runnerMoodClass}`}
         style={{
           backgroundColor: form.backgroundColor,
           color: form.textColor,
@@ -2493,7 +2573,7 @@ function PublicForm({ formId }: { formId: string }) {
   if (submitted) {
     return (
       <div
-        className="public-shell submitted-shell"
+        className={`public-shell submitted-shell ${runnerMoodClass}`}
         style={{
           backgroundColor: form.backgroundColor,
           color: form.textColor,
@@ -2516,7 +2596,9 @@ function PublicForm({ formId }: { formId: string }) {
 
   return (
     <div
-      className={`public-shell ${isCompactPreview ? 'compact-preview' : ''}`}
+      className={`public-shell ${runnerMoodClass} ${
+        isCompactPreview ? 'compact-preview' : ''
+      }`}
       style={{
         backgroundColor: form.backgroundColor,
         color: form.textColor,
@@ -2851,6 +2933,18 @@ function StatusScreen({
 }
 
 export default App
+
+function runnerBackgroundMoodClass(mood: RunnerBackgroundMood | undefined) {
+  return `mood-${mood ?? defaultRunnerBackgroundMood}`
+}
+
+function runnerBackgroundMoodLabel(mood: RunnerBackgroundMood | undefined) {
+  return (
+    runnerBackgroundMoods.find((item) => item.id === mood)?.label ??
+    runnerBackgroundMoods.find((item) => item.id === defaultRunnerBackgroundMood)?.label ??
+    'Guided path'
+  )
+}
 
 function responseHasEmptyAnswer(response: ResponseRecord, fields: FormField[]) {
   return fields.some((field) => {

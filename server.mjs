@@ -16,6 +16,13 @@ const rateWindowMs = 60_000
 const rateLimit = new Map()
 const defaultSuccessMessage = 'Thanks, your response was recorded.'
 const defaultClosedMessage = 'This form is not accepting responses right now.'
+const defaultRunnerBackgroundMood = 'guided'
+const validRunnerBackgroundMoods = new Set([
+  'guided',
+  'clean',
+  'workbench',
+  'complete',
+])
 const validFieldTypes = new Set([
   'short_text',
   'long_text',
@@ -42,6 +49,7 @@ db.exec(`
     accent_color TEXT NOT NULL,
     background_color TEXT NOT NULL,
     text_color TEXT NOT NULL,
+    runner_background_mood TEXT NOT NULL DEFAULT 'guided',
     success_message TEXT NOT NULL,
     closed_message TEXT NOT NULL DEFAULT 'This form is not accepting responses right now.',
     webhook_url TEXT NOT NULL,
@@ -111,6 +119,12 @@ function ensureFormSchema() {
   if (!columns.has('closed_message')) {
     db.exec(
       `ALTER TABLE forms ADD COLUMN closed_message TEXT NOT NULL DEFAULT '${defaultClosedMessage}'`,
+    )
+  }
+
+  if (!columns.has('runner_background_mood')) {
+    db.exec(
+      `ALTER TABLE forms ADD COLUMN runner_background_mood TEXT NOT NULL DEFAULT '${defaultRunnerBackgroundMood}'`,
     )
   }
 }
@@ -240,8 +254,9 @@ function createForm() {
     `
     INSERT INTO forms (
       id, title, description, status, mode, accent_color, background_color,
-      text_color, success_message, closed_message, webhook_url, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      text_color, runner_background_mood, success_message, closed_message,
+      webhook_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
   ).run(
     formId,
@@ -252,6 +267,7 @@ function createForm() {
     '#087f7a',
     '#f7f8f8',
     '#1f2937',
+    defaultRunnerBackgroundMood,
     defaultSuccessMessage,
     defaultClosedMessage,
     '',
@@ -281,8 +297,9 @@ function importFormDefinition(body) {
     `
     INSERT INTO forms (
       id, title, description, status, mode, accent_color, background_color,
-      text_color, success_message, closed_message, webhook_url, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      text_color, runner_background_mood, success_message, closed_message,
+      webhook_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
   ).run(
     formId,
@@ -293,6 +310,7 @@ function importFormDefinition(body) {
     definition.accentColor,
     definition.backgroundColor,
     definition.textColor,
+    definition.runnerBackgroundMood,
     definition.successMessage,
     definition.closedMessage,
     '',
@@ -331,6 +349,7 @@ function getMeta() {
       accentColor: '#087f7a',
       backgroundColor: '#f7f8f8',
       textColor: '#1f2937',
+      runnerBackgroundMood: defaultRunnerBackgroundMood,
     },
   }
 }
@@ -356,6 +375,7 @@ function saveForm(formId, body) {
       accent_color = ?,
       background_color = ?,
       text_color = ?,
+      runner_background_mood = ?,
       success_message = ?,
       closed_message = ?,
       webhook_url = ?,
@@ -370,6 +390,7 @@ function saveForm(formId, body) {
     cleanColor(body.accentColor, '#087f7a'),
     cleanColor(body.backgroundColor, '#f7f8f8'),
     cleanColor(body.textColor, '#1f2937'),
+    cleanRunnerBackgroundMood(body.runnerBackgroundMood),
     cleanText(body.successMessage, defaultSuccessMessage),
     cleanText(body.closedMessage, defaultClosedMessage),
     cleanText(body.webhookUrl, ''),
@@ -542,6 +563,7 @@ function buildFormDefinition(form) {
       accentColor: form.accentColor,
       backgroundColor: form.backgroundColor,
       textColor: form.textColor,
+      runnerBackgroundMood: form.runnerBackgroundMood,
       successMessage: form.successMessage,
       closedMessage: form.closedMessage,
       fields: form.fields.map((field, index) => ({
@@ -566,6 +588,7 @@ function rowToFormSummary(row) {
     accentColor: row.accent_color,
     backgroundColor: row.background_color,
     textColor: row.text_color,
+    runnerBackgroundMood: cleanRunnerBackgroundMood(row.runner_background_mood),
     successMessage: row.success_message || defaultSuccessMessage,
     closedMessage: row.closed_message || defaultClosedMessage,
     webhookUrl: row.webhook_url,
@@ -681,8 +704,9 @@ function seedDatabase() {
     `
     INSERT INTO forms (
       id, title, description, status, mode, accent_color, background_color,
-      text_color, success_message, closed_message, webhook_url, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      text_color, runner_background_mood, success_message, closed_message,
+      webhook_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
   ).run(
     formId,
@@ -693,6 +717,7 @@ function seedDatabase() {
     '#087f7a',
     '#ffffff',
     '#1f2937',
+    defaultRunnerBackgroundMood,
     'Thanks. Your feedback is in the vault.',
     defaultClosedMessage,
     '',
@@ -764,6 +789,7 @@ function normalizeFormDefinition(body) {
     accentColor: importColor(form.accentColor, 'accentColor', '#087f7a'),
     backgroundColor: importColor(form.backgroundColor, 'backgroundColor', '#f7f8f8'),
     textColor: importColor(form.textColor, 'textColor', '#1f2937'),
+    runnerBackgroundMood: importRunnerBackgroundMood(form.runnerBackgroundMood),
     successMessage: optionalImportText(
       form.successMessage,
       500,
@@ -832,12 +858,26 @@ function importColor(value, label, fallback) {
   return value
 }
 
+function importRunnerBackgroundMood(value) {
+  if (value === undefined || value === null || value === '') {
+    return defaultRunnerBackgroundMood
+  }
+  if (typeof value !== 'string' || !validRunnerBackgroundMoods.has(value)) {
+    throw new HttpError(400, 'Import file has an invalid runnerBackgroundMood')
+  }
+  return value
+}
+
 function cleanText(value, fallback) {
   return typeof value === 'string' ? value.slice(0, 5000) : fallback
 }
 
 function cleanColor(value, fallback) {
   return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback
+}
+
+function cleanRunnerBackgroundMood(value) {
+  return validRunnerBackgroundMoods.has(value) ? value : defaultRunnerBackgroundMood
 }
 
 function hashIp(ip) {

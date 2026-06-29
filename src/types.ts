@@ -11,6 +11,7 @@ export type FieldType =
 
 export type FormStatus = 'draft' | 'published'
 export type FormMode = 'flow' | 'classic'
+export type RunnerBackgroundMood = 'guided' | 'clean' | 'workbench' | 'complete'
 export type AnswerValue = string | string[] | number
 
 export interface FormField {
@@ -32,6 +33,7 @@ export interface FormRecord {
   accentColor: string
   backgroundColor: string
   textColor: string
+  runnerBackgroundMood: RunnerBackgroundMood
   successMessage: string
   closedMessage: string
   webhookUrl: string
@@ -77,6 +79,7 @@ export interface FormDefinitionPayload {
     accentColor: string
     backgroundColor: string
     textColor: string
+    runnerBackgroundMood?: RunnerBackgroundMood
     successMessage: string
     closedMessage?: string
     fields: FormDefinitionField[]
@@ -98,5 +101,6 @@ export interface AppMeta {
     accentColor: string
     backgroundColor: string
     textColor: string
+    runnerBackgroundMood: RunnerBackgroundMood
   }
 }

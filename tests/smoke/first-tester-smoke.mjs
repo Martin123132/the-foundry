@@ -171,11 +171,18 @@ async function runDemoWorkflow(baseUrl) {
     ).toBeVisible()
 
     await page.getByRole('button', { name: /Open demo workspace/ }).click()
+    await expect(page.getByText('Demo workspace created')).toBeVisible({
+      timeout: 15_000,
+    })
     await expect(page.getByRole('textbox', { name: 'Form title' })).toHaveValue(
       'Launch feedback demo',
     )
-    await expect(page.getByText('Demo workspace created')).toBeVisible()
     await expect(page.getByRole('heading', { name: '3 submissions' })).toBeVisible()
+
+    await page.getByRole('radio', { name: /Workbench/ }).check()
+    await expect(page.locator('.save-state.saved')).toHaveText('Saved', {
+      timeout: 15_000,
+    })
 
     await page.getByRole('textbox', { name: 'Search responses' }).fill('Excellent')
     await expect(page.getByText('1 of 3 shown')).toBeVisible()
@@ -202,6 +209,10 @@ async function runDemoWorkflow(baseUrl) {
     const definition = JSON.parse(await readDownload(await definitionDownloadPromise))
     assert(definition.omitted.responses === true, 'Definition must omit responses')
     assert(definition.omitted.webhookUrl === true, 'Definition must omit webhook URLs')
+    assert(
+      definition.form.runnerBackgroundMood === 'workbench',
+      'Definition should include the selected public mood',
+    )
     assert(!('responses' in definition), 'Definition payload should not contain responses')
     assert(!('webhookUrl' in definition.form), 'Definition form should not contain webhookUrl')
 
@@ -219,6 +230,10 @@ async function runDemoWorkflow(baseUrl) {
     )
     assert(imported, 'Imported definition should create a draft form')
     assert(imported.responseCount === 0, 'Imported definition should not copy responses')
+    assert(
+      imported.runnerBackgroundMood === 'workbench',
+      'Imported definition should preserve the public mood',
+    )
 
     const invalidImport = await requestJson(`${baseUrl}/api/forms/import`, {
       body: JSON.stringify({
@@ -229,6 +244,18 @@ async function runDemoWorkflow(baseUrl) {
       method: 'POST',
     })
     assert(invalidImport.response.status === 400, 'Malformed imports should fail')
+
+    const invalidMoodImport = await requestJson(`${baseUrl}/api/forms/import`, {
+      body: JSON.stringify({
+        ...definition,
+        form: {
+          ...definition.form,
+          runnerBackgroundMood: 'maze',
+        },
+      }),
+      method: 'POST',
+    })
+    assert(invalidMoodImport.response.status === 400, 'Invalid public moods should fail')
 
     await page.screenshot({
       fullPage: false,
