@@ -8,6 +8,7 @@ license from TWO HANDS NETWORK LTD.
 
 ## Unreleased
 
+- Refreshed README and first-tester notes for public runner mood controls.
 - Added public background mood controls so form creators can choose guided,
   clean, workbench, or completion-bright runner surfaces.
 - Added generated Foundry workbench and guided-path wallpapers, with subtle

@@ -20,7 +20,7 @@ vendor lock-in, or handing their data to another subscription service.
 - Select and bulk-delete responses during local cleanup
 - Export responses as CSV or structured JSON
 - Import and export full form definitions between installs
-- Tune success and closed-form messages for public visitors
+- Tune public runner mood, success messages, and closed-form messages
 - Configure webhook delivery for downstream workflows
 - Inspect storage, environment, and default form settings in the admin UI
 - Run locally, on a small server, or in Docker
@@ -30,6 +30,8 @@ vendor lock-in, or handing their data to another subscription service.
 ![Starter template picker](docs/images/the-foundry-templates.png)
 
 ![Sharing controls](docs/images/the-foundry-sharing.png)
+
+![Public mood controls](docs/images/the-foundry-public-mood.png)
 
 ![Published form runner](docs/images/the-foundry-runner.png)
 
@@ -59,7 +61,8 @@ npm run dev
 
 1. Open the demo workspace to see a published form with sample responses, or
    create a form from a starter template.
-2. Pick a theme preset, check the draft or compact preview, then publish it.
+2. Pick a theme preset and public mood, check the draft or compact preview,
+   then publish it.
 3. Open the live public runner from the sharing panel and submit a test response.
 4. Return to the admin view, search or filter responses, then export visible
    rows as CSV or JSON.
@@ -86,14 +89,16 @@ The legacy `OPENFORMS_DATA_DIR` name and `openforms.sqlite` filename are kept
 for compatibility with existing local installs.
 
 The admin Operations panel shows the active SQLite mode, data directory,
-database file, bind address, port, and default new-form colors.
+database file, bind address, port, default new-form colors, and default public
+runner mood.
 
 ## Form Definitions
 
 Use the Definition panel in the admin UI to export a form as portable JSON or
 import a JSON definition as a new draft. Definition exports include form copy,
-mode, colors, and questions. They intentionally omit responses and webhook URLs
-so demo files can be shared without collected data or private delivery targets.
+mode, colors, public runner mood, and questions. They intentionally omit
+responses and webhook URLs so demo files can be shared without collected data
+or private delivery targets.
 
 ## Docker
 
